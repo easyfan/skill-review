@@ -1,0 +1,267 @@
+{
+  "skill_name": "skill-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/skill-review",
+      "expected_output": "无参数时输出使用说明（含 all/all-commands/all-agents/target_list 四种用法和示例），不启动任何 Agent，干净退出。",
+      "files": [],
+      "assertions": [
+        "输出含 '/skill-review all' 示例",
+        "输出含 '/skill-review all-agents' 示例",
+        "输出含 '/skill-review all-commands' 示例",
+        "输出含 '逗号分隔' 或多目标用法说明",
+        "未启动任何 Task tool（无 Agent 调度）"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "/skill-review nonexistent-skill-xyz",
+      "expected_output": "解析 target_list，在动态发现的 skill 映射表中找不到 nonexistent-skill-xyz，输出 '以下名称未找到' 错误和可用名称列表，退出；不启动任何 Agent。",
+      "files": [],
+      "assertions": [
+        "输出含 '未找到' 或 '不存在' 的错误提示",
+        "输出含 nonexistent-skill-xyz 名称",
+        "输出含可用名称列表或引导用户使用 all",
+        "未启动任何 Task tool"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/skill-review skill-review",
+      "expected_output": "解析目标为 skill-review 自身，进入自指模式，输出 '[自指模式] 检测到审查目标包含委员会自身文件' 提示，说明 Reporter 将仅生成建议不直接修改；然后继续执行 Stage 1 并行审查。",
+      "files": [],
+      "assertions": [
+        "输出含 '[自指模式]' 标记",
+        "输出含 'Reporter 将仅生成修改建议' 或等价说明",
+        "启动 Stage 1（4 个并行 Agent）",
+        "Stage 1 完成后展示发现摘要"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "/skill-review all-commands",
+      "expected_output": "动态发现 ~/.claude/commands/ 和项目级 .claude/commands/ 下所有 .md 文件，构建目标列表；执行 Step 0e 格式快检；并行启动 4 个 Stage 1 Agent（S1/S2/S3/S4）；Stage 1 完成后展示汇总报告并等待用户确认进入 Stage 2。",
+      "files": [],
+      "assertions": [
+        "动态发现了 commands 目录下的文件（Bash ls 或 Glob）",
+        "执行了格式快检（输出含 '格式快检' 或 'YAML front-matter'）",
+        "并行启动了 4 个 Agent（单消息多 Task 调用或输出显示 S1/S2/S3/S4）",
+        "Stage 1 完成后输出汇总报告（含发现计数）",
+        "等待用户确认进入 Stage 2（输出含 '继续' 或 'Stage 2'）"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "/skill-review looper",
+      "expected_output": "在动态发现的 skill 映射表中找到 looper（来自 ~/.claude/commands/looper.md），执行格式快检，启动 Stage 1 四维审查；Stage 1 完成后展示发现摘要。",
+      "files": [],
+      "assertions": [
+        "在 ~/.claude/commands/ 或项目级 commands/ 中找到 looper.md",
+        "执行了格式快检",
+        "启动了 Stage 1（输出含 S1/S2/S3/S4 或 4 个 Agent）",
+        "Stage 1 完成后输出发现计数"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "/skill-review all,looper",
+      "expected_output": "识别为混合参数（all + 具体名称），输出 '不支持混合使用' 错误，建议使用具体文件列表或单独 all，退出；不启动任何 Agent。",
+      "files": [],
+      "assertions": [
+        "输出含 '不支持' 或 '混合' 的错误提示",
+        "输出含修正建议（使用 all 或具体列表）",
+        "未启动任何 Task tool"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "/skill-review looper, patterns",
+      "expected_output": "检测到逗号后有空格（'looper, patterns'），自动修正为 'looper,patterns'，输出格式修正提示后继续解析；找到两个目标文件后正常启动 Stage 1。",
+      "files": [],
+      "assertions": [
+        "输出含 '格式提示' 或 '已自动去除逗号后空格' 说明",
+        "解析出两个目标：looper 和 patterns",
+        "启动了 Stage 1（4 个 Agent）"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "/skill-review all-agents",
+      "expected_output": "动态发现 ~/.claude/agents/ 和项目级 .claude/agents/ 下所有 .md 文件；执行格式快检；对每个 agent 文件额外检查 name 字段 kebab-case；并行启动 4 个 Stage 1 Agent；Stage 1 完成后展示汇总报告并等待确认。",
+      "files": [],
+      "assertions": [
+        "动态发现了 agents 目录下的文件（Bash ls 或 Glob）",
+        "执行了格式快检（含 name kebab-case 检查）",
+        "并行启动了 4 个 Stage 1 Agent",
+        "Stage 1 完成后展示汇总报告（含发现计数）",
+        "等待用户确认进入 Stage 2"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "/skill-review looper",
+      "expected_output": "Step 0b 检测到 lock.pid 中 PID 对应进程仍在运行，输出 '已有另一个 /skill-review 实例在运行' 错误，附带运行中的 PID，退出；不创建 scratch 文件，不启动任何 Agent。",
+      "files": [
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/lock.pid",
+          "content": "1"
+        }
+      ],
+      "assertions": [
+        "读取了 lock.pid 文件",
+        "执行了 kill -0 PID 存活检查（Bash）",
+        "输出含 '已有另一个' 或 '实例在运行' 的错误提示",
+        "输出含 PID 信息",
+        "未启动任何 Task tool"
+      ],
+      "note": "文件中 PID=1 在 Linux 容器中为 init 进程，始终存活，可稳定触发并发保护逻辑"
+    },
+    {
+      "id": 10,
+      "prompt": "/skill-review all",
+      "expected_output": "发现目标文件数超过 15 个，输出 '⚠️ 目标文件数量较多（N 个）' 成本警告，建议分批执行（all-commands 和 all-agents 分两次），等待用户输入 '继续' 或 '拆分'；不立即启动 Agent。",
+      "files": [],
+      "assertions": [
+        "动态发现了所有 commands + agents 文件",
+        "检查了文件总数（Bash wc 或计数）",
+        "若文件数 > 15，输出成本警告（含 '⚠️' 或 '数量较多'）",
+        "建议拆分命令（含 'all-commands' 和 'all-agents' 示例）",
+        "等待用户确认后才启动 Agent（不直接启动）",
+        "注：若当前环境文件数 ≤ 15，跳过警告直接执行，断言'启动了 Stage 1'"
+      ],
+      "note": "此用例验证成本警告门控逻辑；实际结果取决于环境中 skill 文件数量"
+    },
+    {
+      "id": 11,
+      "prompt": "/skill-review looper",
+      "expected_output": "Stage 1 全部完成且 4 个 findings 文件均为零发现（无任何 ### 标记）；检测到零发现条件，写入 pipeline_status.md（STATUS: ZERO_FINDINGS）并跳过 Challenger；Reporter 生成空报告并输出质量等级 ⭐；不启动 Challenger Agent。",
+      "files": [
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s1_findings.md",
+          "content": "## 通过项\n- looper.md: 所有维度通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s2_findings.md",
+          "content": "## 通过项\n- looper.md: 链路设计通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s3_findings.md",
+          "content": "## 通过项\n- looper.md: 与业界最佳实践一致"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s4_findings.md",
+          "content": "## 通过项\n- looper.md: 可用性通过"
+        }
+      ],
+      "assertions": [
+        "读取了 4 个 findings 文件",
+        "检测到零发现条件（grep 无 '### ' 标记或等价计数为 0）",
+        "写入了 pipeline_status.md，内容含 'ZERO_FINDINGS'",
+        "写入了 challenger_response.md，内容含 '跳过' 字样",
+        "未启动 Challenger Agent（subagent_type: skill-challenger）",
+        "启动了 Reporter，报告中质量等级为 ⭐"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "/skill-review looper",
+      "expected_output": "检测到 .claude/user-level-write 存在（元项目模式），ELEVATED=true；目标 looper 来自 ~/.claude/commands/（用户级），权限检测输出 '元项目模式（user-level-write 已授权），用户级文件可直接修改'；Stage 1+2 正常执行，Reporter 可直接 Edit 用户级文件。",
+      "files": [
+        {
+          "path": ".claude/user-level-write",
+          "content": ""
+        }
+      ],
+      "assertions": [
+        "检测了 .claude/user-level-write 文件存在性",
+        "输出含 '元项目模式' 或 'ELEVATED=true' 或 '用户级文件可直接修改'",
+        "写入了 file_classification.md（包含 USER_LEVEL_FILES 和 PROJECT_LEVEL_FILES）",
+        "启动了 Stage 1（4 个 Agent）"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "/skill-review looper",
+      "expected_output": "未检测到 .claude/user-level-write（非元项目模式），且目标 looper.md 来自 ~/.claude/commands/（用户级文件）；权限检测输出非元项目提示，说明用户级文件发现将写入 ~/.claude/proposals/ 而非直接修改；Stage 1+2 正常执行，Reporter 不 Edit 用户级文件。",
+      "files": [],
+      "assertions": [
+        "检测了 .claude/user-level-write 不存在",
+        "输出含 '非元项目' 或 '用户级文件' + 'proposals' 的提示",
+        "写入了 file_classification.md",
+        "file_classification.md 中 USER_LEVEL_FILES 含 looper.md 的路径",
+        "启动了 Stage 1（4 个 Agent）"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "/skill-review looper",
+      "expected_output": "Stage 1 完成，Stage 2a Challenger 执行后未生成 challenger_response.md；协调者检测到文件缺失，输出 '⚠️ Challenger 执行失败' 提示，提供选项 A（跳过裁定，发现按原始严重性进入 Reporter）和选项 B（终止流程）；等待用户选择。",
+      "files": [
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s1_findings.md",
+          "content": "### [P1] looper.md: description 触发措辞不精确\n**维度**: D4\n**证据**: description 中无明确触发词\n**问题**: 可能导致触发失误\n**建议**: 增加明确的触发场景描述"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s2_findings.md",
+          "content": "## 通过项\n- looper.md: 链路设计通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s3_findings.md",
+          "content": "## 通过项\n- looper.md: 与业界实践一致"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s4_findings.md",
+          "content": "## 通过项\n- looper.md: 可用性通过"
+        }
+      ],
+      "assertions": [
+        "读取了 4 个 findings 文件",
+        "检测到 challenger_response.md 不存在（ls 或 Bash 检查）",
+        "输出含 '⚠️ Challenger 执行失败' 或等价提示",
+        "输出含选项 A 说明（跳过裁定继续执行）",
+        "输出含选项 B 说明（终止流程）",
+        "等待用户输入后才继续（不自动选择）"
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "/skill-review looper",
+      "expected_output": "Stage 2b Reporter 执行完成，检测到 modification_log.md 包含 description 字段变更，自动触发 Stage 3；输出 '[Stage 3 - 自动触发] 检测到 description 字段已修改'；协调者内联（不启动 Task）设计 should-trigger 和 should-not-trigger 断言，输出到 stage3_assertions.md，附带手动验证命令。",
+      "files": [
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/modification_log.md",
+          "content": "FIELD | FILE | BEFORE | AFTER\ndescription | ~/.claude/commands/looper.md | 旧描述文本 | 新描述文本，明确触发场景"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s1_findings.md",
+          "content": "## 通过项\n- looper.md: 通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s2_findings.md",
+          "content": "## 通过项\n- looper.md: 通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s3_findings.md",
+          "content": "## 通过项\n- looper.md: 通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/s4_findings.md",
+          "content": "## 通过项\n- looper.md: 通过"
+        },
+        {
+          "path": ".claude/agent_scratch/skill_review_committee/challenger_response.md",
+          "content": "# Challenger 完成\nSTATUS: NO_HIGH_PRIORITY_FINDINGS\n所有 Stage 1 发现均为 P2/P3，无需 Challenger 裁定。"
+        }
+      ],
+      "assertions": [
+        "读取了 modification_log.md（Bash grep 或 Read）",
+        "检测到 modification_log.md 包含 'description'（HAS_DESC_CHANGE=true）",
+        "输出含 '[Stage 3 - 自动触发]' 或 'description 字段已修改'",
+        "协调者内联执行（不启动 Task tool 给 Grader）",
+        "写入了 stage3_assertions.md（含 should_trigger 和 should_not_trigger 字段）",
+        "输出包含手动验证命令（含 run_loop.py 路径或等价说明）"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "skill-review-cc",
+  "version": "1.3.0",
+  "description": "Skills/Agents 设计委员会——对 Claude Code skill/agent 文件进行多维质量审查（S1 定义质量 / S2 链路审计 / S3 外部研究 / S4 可用性 + Challenger + Reporter）",
+  "keywords": [
+    "claude-code",
+    "skill-review",
+    "agent",
+    "quality",
+    "committee",
+    "orchestration"
+  ],
+  "author": {
+    "name": "cc-meta-project"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easyfan/skill-review.git"
+  },
+  "homepage": "https://github.com/easyfan/skill-review#readme",
+  "bugs": {
+    "url": "https://github.com/easyfan/skill-review/issues"
+  },
+  "files": [
+    ".claude-plugin/",
+    "commands/",
+    "agents/",
+    "SKILL.md",
+    "install.sh"
+  ],
+  "bin": {
+    "skill-review-cc": "install.sh"
+  },
+  "scripts": {
+    "postinstall": "echo '\\n  skill-review-cc installed!\\n  Run: npx skill-review-install\\n  Or copy manually:\\n    cp commands/skill-review.md ~/.claude/commands/\\n    cp agents/*.md ~/.claude/agents/\\n'"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

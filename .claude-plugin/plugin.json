@@ -1,0 +1,15 @@
+{
+  "name": "skill-review-cc",
+  "type": "skill",
+  "description": "Skills/Agents 设计委员会——对 Claude Code skill/agent 文件进行多维质量审查",
+  "install": "bash install.sh",
+  "commands": ["skill-review"],
+  "agents": [
+    "skill-reviewer-s1",
+    "skill-reviewer-s2",
+    "skill-researcher",
+    "skill-reviewer-s4",
+    "skill-challenger",
+    "skill-reporter"
+  ]
+}
