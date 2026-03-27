@@ -1,4 +1,4 @@
-# skill-review-cc
+# skill-review
 
 Skills/Agents 设计委员会——对 Claude Code skill/agent/command 文件进行系统性多维质量审查。
 
@@ -27,14 +27,14 @@ Skills/Agents 设计委员会——对 Claude Code skill/agent/command 文件进
 ### Option A — npm (未发布，暂不可用)
 
 ```bash
-npm install -g skill-review-cc
-npx skill-review-cc
+npm install -g skill-review
+npx skill-review
 ```
 
 ### Option B — npx 一次性安装（未发布，暂不可用）
 
 ```bash
-npx skill-review-cc
+npx skill-review
 ```
 -->
 
@@ -43,8 +43,8 @@ npx skill-review-cc
 在 Claude Code 会话中运行：
 
 ```
-/plugin marketplace add easyfan/skill-review-cc
-/plugin install skill-review-cc@skill-review-cc
+/plugin marketplace add easyfan/skill-review
+/plugin install skill-review@skill-review
 ```
 
 > **注**：`/plugin` 是 Claude Code REPL 内置命令，无法通过 `claude -p` 调用（返回 `Unknown skill: plugin`），因此自动化测试流水线（skill-test Stage 5）不覆盖此安装方式，需在 Claude Code 会话中手动执行。

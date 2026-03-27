@@ -1,4 +1,4 @@
-# skill-review-cc
+# skill-review
 
 Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, and command files.
 
@@ -27,14 +27,14 @@ Quality grades: 🔴 Unusable / 🟡 Usable with defects / 🟢 Production-ready
 ### Option A — npm (not yet published)
 
 ```bash
-npm install -g skill-review-cc
-npx skill-review-cc
+npm install -g skill-review
+npx skill-review
 ```
 
 ### Option B — npx one-shot (not yet published)
 
 ```bash
-npx skill-review-cc
+npx skill-review
 ```
 -->
 
@@ -43,8 +43,8 @@ npx skill-review-cc
 Run inside a Claude Code session:
 
 ```
-/plugin marketplace add easyfan/skill-review-cc
-/plugin install skill-review-cc@skill-review-cc
+/plugin marketplace add easyfan/skill-review
+/plugin install skill-review@skill-review
 ```
 
 > **Note**: `/plugin` is a Claude Code REPL built-in command and cannot be invoked via `claude -p` (returns `Unknown skill: plugin`). Automated test pipelines (skill-test Stage 5) do not cover this install path — run it manually in a Claude Code session.
