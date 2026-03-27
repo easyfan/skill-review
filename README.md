@@ -47,7 +47,7 @@ Run inside a Claude Code session:
 /plugin install skill-review@skill-review
 ```
 
-> **Note**: `/plugin` is a Claude Code REPL built-in command and cannot be invoked via `claude -p` (returns `Unknown skill: plugin`). Automated test pipelines (skill-test Stage 5) do not cover this install path — run it manually in a Claude Code session.
+> ⚠️ **Not verified by automated tests**: `/plugin` is a Claude Code REPL built-in and cannot be invoked via `claude -p`. Run manually in a Claude Code session; not covered by skill-test pipeline (looper Stage 5).
 
 ### Option B — install script
 
@@ -65,6 +65,8 @@ CLAUDE_DIR=~/.claude bash install.sh
 bash install.sh --target ~/.claude
 ```
 
+> ✅ **Verified**: covered by the skill-test pipeline (looper Stage 5).
+
 ### Option C — manual
 
 ```bash
@@ -73,6 +75,8 @@ cp agents/*.md ~/.claude/agents/
 ```
 
 Restart your Claude Code session after installation for agents to take effect.
+
+> ✅ **Verified**: covered by the skill-test pipeline (looper Stage 5).
 
 ## Usage
 

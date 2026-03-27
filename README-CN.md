@@ -47,7 +47,7 @@ npx skill-review
 /plugin install skill-review@skill-review
 ```
 
-> **注**：`/plugin` 是 Claude Code REPL 内置命令，无法通过 `claude -p` 调用（返回 `Unknown skill: plugin`），因此自动化测试流水线（skill-test Stage 5）不覆盖此安装方式，需在 Claude Code 会话中手动执行。
+> ⚠️ **未经自动化验证**：`/plugin` 是 Claude Code REPL 内置命令，无法通过 `claude -p` 调用，需在 Claude Code 会话中手动执行；不在 skill-test 流水线（looper Stage 5）覆盖范围内。
 
 ### Option B — 本地脚本
 
@@ -65,6 +65,8 @@ CLAUDE_DIR=~/.claude bash install.sh
 bash install.sh --target ~/.claude
 ```
 
+> ✅ **已验证**：已通过 skill-test 流水线自动化验证（looper Stage 5）。
+
 ### Option C — 手动
 
 ```bash
@@ -73,6 +75,8 @@ cp agents/*.md ~/.claude/agents/
 ```
 
 安装后重启 Claude Code 会话使 agent 生效。
+
+> ✅ **已验证**：已通过 skill-test 流水线自动化验证（looper Stage 5）。
 
 ## 使用
 
