@@ -1,7 +1,7 @@
 {
-  "name": "skill-review-cc",
-  "type": "skill",
-  "description": "Skills/Agents 设计委员会——对 Claude Code skill/agent 文件进行多维质量审查",
+  "name": "skill-review",
+  "version": "1.3.0",
+  "description": "Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, and command files",
   "install": "bash install.sh",
   "commands": ["skill-review"],
   "agents": [
@@ -11,5 +11,20 @@
     "skill-reviewer-s4",
     "skill-challenger",
     "skill-reporter"
+  ],
+  "author": {
+    "name": "cc-meta-project"
+  },
+  "homepage": "https://github.com/easyfan/skill-review",
+  "repository": "https://github.com/easyfan/skill-review",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "skill-review",
+    "quality",
+    "review",
+    "agents",
+    "workflow",
+    "automation"
   ]
 }
