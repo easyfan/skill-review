@@ -1,7 +1,7 @@
 {
-  "name": "skill-review-cc",
+  "name": "skill-review",
   "version": "1.3.0",
-  "description": "Skills/Agents 设计委员会——对 Claude Code skill/agent 文件进行多维质量审查（S1 定义质量 / S2 链路审计 / S3 外部研究 / S4 可用性 + Challenger + Reporter）",
+  "description": "Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, and command files",
   "keywords": [
     "claude-code",
     "skill-review",
@@ -30,10 +30,10 @@
     "install.sh"
   ],
   "bin": {
-    "skill-review-cc": "install.sh"
+    "skill-review": "install.sh"
   },
   "scripts": {
-    "postinstall": "echo '\\n  skill-review-cc installed!\\n  Run: npx skill-review-install\\n  Or copy manually:\\n    cp commands/skill-review.md ~/.claude/commands/\\n    cp agents/*.md ~/.claude/agents/\\n'"
+    "postinstall": "echo '\\n  skill-review installed!\\n  Run: npx skill-review-install\\n  Or copy manually:\\n    cp commands/skill-review.md ~/.claude/commands/\\n    cp agents/*.md ~/.claude/agents/\\n'"
   },
   "engines": {
     "node": ">=18"
