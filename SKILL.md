@@ -1,70 +1,70 @@
 ---
 name: skill-review
-description: Skills/Agents 设计委员会——对 skill/agent 文件进行多维质量审查的 command 包，含协调者 command + 六个专项 Agent（S1/S2/S3/S4/Challenger/Reporter）。安装到 ~/.claude/commands/ 和 ~/.claude/agents/。
+description: Skills/Agents Design Committee — multi-dimensional quality review for Claude Code skill/agent files. Includes a coordinator command and six specialist agents (S1/S2/S3/S4/Challenger/Reporter). Installs to ~/.claude/commands/ and ~/.claude/agents/.
 ---
 
-# skill-review 包
+# skill-review package
 
-## 包含文件
+## Files
 
-### Commands（协调者）
-- `commands/skill-review.md` → 安装到 `~/.claude/commands/skill-review.md`
+### Commands (coordinator)
+- `commands/skill-review.md` → `~/.claude/commands/skill-review.md`
 
-### Agents（委员会成员）
-- `agents/skill-reviewer-s1.md` → 安装到 `~/.claude/agents/skill-reviewer-s1.md`（定义质量审计）
-- `agents/skill-reviewer-s2.md` → 安装到 `~/.claude/agents/skill-reviewer-s2.md`（互动链路审计）
-- `agents/skill-researcher.md` → 安装到 `~/.claude/agents/skill-researcher.md`（外部前沿研究）
-- `agents/skill-reviewer-s4.md` → 安装到 `~/.claude/agents/skill-reviewer-s4.md`（可用性审计）
-- `agents/skill-challenger.md` → 安装到 `~/.claude/agents/skill-challenger.md`（Challenger，opus）
-- `agents/skill-reporter.md` → 安装到 `~/.claude/agents/skill-reporter.md`（Reporter，含 Edit 权限）
+### Agents (committee members)
+- `agents/skill-reviewer-s1.md` → `~/.claude/agents/skill-reviewer-s1.md` (definition quality)
+- `agents/skill-reviewer-s2.md` → `~/.claude/agents/skill-reviewer-s2.md` (interaction chain)
+- `agents/skill-researcher.md` → `~/.claude/agents/skill-researcher.md` (external research)
+- `agents/skill-reviewer-s4.md` → `~/.claude/agents/skill-reviewer-s4.md` (usability)
+- `agents/skill-challenger.md` → `~/.claude/agents/skill-challenger.md` (Challenger, opus)
+- `agents/skill-reporter.md` → `~/.claude/agents/skill-reporter.md` (Reporter, with Edit)
 
-## 委员会结构
+## Pipeline structure
 
 ```
 /skill-review <target>
         │
-Stage 1 │  ┌──────────────────────────────────────────────────┐
-（并行）  │  │  S1 定义质量  S2 链路审计  S3 外部研究  S4 可用性  │
-        │  └──────────────────────────────────────────────────┘
-        │                    ↓ 汇总 ↓
-Stage 1 │  展示发现摘要，等待用户确认进入 Stage 2
-中场    │
+Stage 1 │  ┌──────────────────────────────────────────────────────┐
+(par.)  │  │  S1 Definition  S2 Chain  S3 Research  S4 Usability  │
+        │  └──────────────────────────────────────────────────────┘
+        │                    ↓ summarize ↓
+Stage 1 │  Present findings summary, wait for user to confirm Stage 2
+midpoint│
         │
-Stage 2 │  Challenger（opus）── 反驳性验证 P0/P1 发现
-（串行）  │        ↓
-        │  Reporter（sonnet，含 Edit）── 报告 + 直接修复
+Stage 2 │  Challenger (opus) — adversarial verification of P0/P1 findings
+(ser.)  │        ↓
+        │  Reporter (sonnet + Edit) — consolidated report + direct fixes
         │
-Stage 3 │  Grader（可选）── 断言设计（description 变更时触发）
-（条件）  │
+Stage 3 │  Grader (optional) — assertion design (triggered on description change)
+(cond.) │
 ```
 
-## 模型分配
+## Model assignments
 
-| 成员 | 模型 | 原因 |
-|------|------|------|
-| S1/S2/S4 | sonnet | 文档分析，无需高成本推理 |
-| S3 | sonnet | 外部搜索研究，sonnet 足够 |
-| Challenger | opus | 反驳性验证需要更强推理能力 |
-| Reporter | sonnet | 综合报告 + 文件 Edit，协调为主 |
+| Member | Model | Reason |
+|--------|-------|--------|
+| S1/S2/S4 | sonnet | Document analysis; no high-cost reasoning needed |
+| S3 | sonnet | External search research; sonnet is sufficient |
+| Challenger | opus | Adversarial verification requires stronger reasoning |
+| Reporter | sonnet | Consolidated report + file Edit; primarily coordination |
 
-## 前置依赖
+## Prerequisites
 
-无外部工具依赖。S3 研究员在有 WebSearch/Jina MCP 时效果更好，但不是必须条件。
+No external tool dependencies. S3 researcher works better with WebSearch/Jina MCP available, but it is not required.
 
-## 权限设计
+## Permission model
 
-- **非元项目**（`.claude/user-level-write` 不存在）：审查仅针对项目级文件；用户级文件（`~/.claude/`）的发现写入 `~/.claude/proposals/`，不直接修改
-- **元项目**（`.claude/user-level-write` 存在）：可直接修改 `~/.claude/` 下的 skill/agent 文件
+- **Regular project** (`.claude/user-level-write` absent): review targets project-level files only; findings for user-level files (`~/.claude/`) are written to `~/.claude/proposals/` and not directly modified
+- **Meta-project** (`.claude/user-level-write` present): Reporter may directly edit skill/agent files under `~/.claude/`
 
-## 自指模式
+## Self-referential mode
 
-审查目标包含委员会自身文件（skill-review、skill-reviewer-s*、skill-researcher、skill-challenger、skill-reporter）时：
-- Reporter 仅生成建议，**禁止直接 Edit**
-- 不传入项目 CLAUDE.md（防止项目偏见影响通用工具审查）
+When review targets include committee files themselves (skill-review, skill-reviewer-s*, skill-researcher, skill-challenger, skill-reporter):
+- Reporter generates suggestions only — **direct Edit is prohibited**
+- Project CLAUDE.md is not passed in (prevents project bias from affecting review of general-purpose tools)
 
-## 用途
+## Purpose
 
-对已安装的 skill/agent 文件进行系统性质量评估，输出：
-- Stage 1：四维并行发现（定义质量 / 链路审计 / 外部对标 / 可用性）
-- Stage 2：Challenger 反驳验证 + Reporter 综合报告 + 直接修复
-- 质量等级：🔴 不可用 / 🟡 可用有缺陷 / 🟢 生产可用 / ⭐ 优秀
+Systematic quality assessment of installed skill/agent files, producing:
+- Stage 1: four-dimensional parallel findings (definition quality / chain audit / external benchmarking / usability)
+- Stage 2: Challenger adversarial verification + Reporter consolidated report + direct fixes
+- Quality grade: 🔴 Unusable / 🟡 Usable with defects / 🟢 Production-ready / ⭐ Excellent

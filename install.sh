@@ -5,9 +5,9 @@ set -euo pipefail
 #
 # Usage:
 #   bash install.sh [--target <claude_home>]
-#   CLAUDE_DIR=<claude_home> bash install.sh      # packer 约定（优先级低于 --target）
+#   CLAUDE_DIR=<claude_home> bash install.sh      # packer convention (lower priority than --target)
 #
-# 安装内容：
+# Installs:
 #   commands/skill-review.md  → <claude_home>/commands/skill-review.md
 #   agents/skill-reviewer-s1.md → <claude_home>/agents/skill-reviewer-s1.md
 #   agents/skill-reviewer-s2.md → <claude_home>/agents/skill-reviewer-s2.md
