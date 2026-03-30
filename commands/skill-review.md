@@ -6,16 +6,18 @@ allowed-tools: ["Bash", "Read", "Write", "Task"]
 
 ## 使用方式
 ```
-/skill-review [target_list|all|all-commands|all-agents]
+/skill-review [target_list|all|all-commands|all-agents|all-skills]
 ```
 
 `target_list` 格式：逗号分隔的 skill 名称，不含路径和 `.md` 后缀，不加空格（如：`mr-review,perf-tune`）
 
 **示例**：
-- `/skill-review all` — 审查所有 commands 和 agents
+- `/skill-review all` — 审查所有 commands、agents 和 skills
 - `/skill-review all-agents` — 仅审查 agent 定义
 - `/skill-review all-commands` — 仅审查 command 定义
-- `/skill-review mr-review,perf-tune` — 审查指定 skill（逗号分隔，不加空格）
+- `/skill-review all-skills` — 仅审查 skills（`~/.claude/skills/*/SKILL.md`）
+- `/skill-review readme-i18n` — 审查指定 skill/command/agent
+- `/skill-review mr-review,perf-tune` — 审查多个（逗号分隔，不加空格）
 
 **注意**：委员会 Reporter 在 Stage 2 完成后将**直接修改**问题文件中确认无争议的改进项。请提前确认已提交当前工作区变更。
 
@@ -49,8 +51,9 @@ allowed-tools: ["Bash", "Read", "Write", "Task"]
 | `<PROJECT_ROOT>/.claude/agents/` | 项目级 agents |
 | `~/.claude/commands/` | 用户级 commands（跨项目共用）|
 | `~/.claude/agents/` | 用户级 agents（跨项目共用）|
+| `~/.claude/skills/*/SKILL.md` | 用户级 skills（`all-skills` 或具名目标时扫描）|
 
-`PROJECT_ROOT` = 执行命令时的当前工作目录（`pwd`）。同名文件时项目级优先于用户级。
+`PROJECT_ROOT` = 执行命令时的当前工作目录（`pwd`）。同名文件时项目级优先于用户级。Skills 以目录名（而非文件名）作为 target_list 中的标识符（如 `readme-i18n` 对应 `~/.claude/skills/readme-i18n/SKILL.md`）。
 
 ---
 
@@ -79,7 +82,13 @@ ls "$PROJECT_ROOT/.claude/agents/"*.md 2>/dev/null
 # 用户级（补充，同名时被项目级覆盖）
 ls "$HOME/.claude/commands/"*.md 2>/dev/null
 ls "$HOME/.claude/agents/"*.md 2>/dev/null
+# 用户级 skills（以目录名为 key）
+for skill_dir in "$HOME/.claude/skills"/*/; do
+  [ -f "${skill_dir}SKILL.md" ] && echo "${skill_dir}SKILL.md"
+done
 ```
+
+Skills 映射规则：目录名（如 `readme-i18n`）→ `~/.claude/skills/readme-i18n/SKILL.md`。若 commands/agents 中存在同名文件，commands/agents 优先（skills 以目录名+`/SKILL.md` 结构区分，通常不会冲突）。
 
 解析 `$ARGUMENTS`：
 
@@ -97,8 +106,8 @@ ls "$HOME/.claude/agents/"*.md 2>/dev/null
 **Step 0a-2（安全过滤）**：拒绝非法参数格式，防止路径遍历（前一步失败则退出，不执行此步）：
 
 ```bash
-# 白名单：仅允许 all/all-commands/all-agents 或 kebab-case 名称（逗号分隔）
-if ! echo "$ARGUMENTS" | grep -qE '^(all|all-commands|all-agents|[a-z][a-z0-9_-]+(,[a-z][a-z0-9_-]+)*)$'; then
+# 白名单：仅允许 all/all-commands/all-agents/all-skills 或 kebab-case 名称（逗号分隔）
+if ! echo "$ARGUMENTS" | grep -qE '^(all|all-commands|all-agents|all-skills|[a-z][a-z0-9_-]+(,[a-z][a-z0-9_-]+)*)$'; then
   echo "错误：参数格式不合法。"
   echo "请使用 skill 名称（不含路径和 .md 后缀）："
   echo "  正确：/skill-review mr-review"
@@ -120,17 +129,19 @@ if echo "$ARGUMENTS" | grep -q ", "; then
 fi
 ```
 
-- `all` → 所有发现的 commands + agents
+- `all` → 所有发现的 commands + agents + skills
 - `all-commands` → 仅 commands
 - `all-agents` → 仅 agents
-- 逗号分隔名称 → 在动态发现的映射表中按名称（不含路径和 `.md`）查找；名称不存在时，输出错误信息并退出（不执行审查）
-- 混合参数（如 `all,mr-review`）不合法，输出错误并退出：`错误：不支持 all/all-commands/all-agents 与具体名称混合使用，请使用具体文件列表或单独特殊值`
+- `all-skills` → 仅 `~/.claude/skills/*/SKILL.md`
+- 逗号分隔名称 → 在动态发现的映射表中按名称查找（commands/agents 用文件 basename 不含 `.md`；skills 用目录名）；名称不存在时，输出错误信息并退出（不执行审查）
+- 混合参数（如 `all,mr-review`）不合法，输出错误并退出：`错误：不支持 all/all-commands/all-agents/all-skills 与具体名称混合使用，请使用具体文件列表或单独特殊值`
 - 参数缺省时报错展示用法说明（见前置空值检查）：
   ```
   错误：以下名称未找到：<name1>, <name2>
   可用名称列表：
     commands: <list>
     agents: <list>
+    skills: <list>
   请重新执行：/skill-review <正确名称> 或 /skill-review all
   ```
 
@@ -238,7 +249,7 @@ ls -la "$PROJECT_ROOT/.claude/commands/" "$PROJECT_ROOT/.claude/agents/" "$HOME/
 
 在验证完成后，输出进度提示：
 ```
-[审查启动] 已发现 <N> 个有效目标文件（<M> 个 commands, <K> 个 agents）
+[审查启动] 已发现 <N> 个有效目标文件（<M> 个 commands, <K> 个 agents, <J> 个 skills）
 并行启动 4 个审计 Agent（S1 定义质量 / S2 链路 / S3 前沿研究 / S4 可用性）
 预计等待：Stage 1 共 2-10 分钟（S3 含 Web 搜索，超过 15 分钟可视为超时）。请等待...
 若 S3 超时或失败，该维度将标注 [分析失败] 后继续，不影响其他三个维度结果。
@@ -295,6 +306,9 @@ done
 ```bash
 for f in <目标文件列表>; do
   echo "=== $(basename $f) ==="
+  IS_SKILL=false
+  echo "$f" | grep -q "/skills/" && IS_SKILL=true
+
   # 检查 1：YAML front-matter 是否存在
   head -1 "$f" | grep -q "^---" || echo "  ❌ 缺少 YAML front-matter"
   # 检查 2：description 字段是否存在
@@ -307,6 +321,15 @@ for f in <目标文件列表>; do
     grep -q "^name:" "$f" || echo "  ❌ agent 缺少 name 字段"
     name=$(grep "^name:" "$f" | head -1 | sed 's/^name:[[:space:]]*//')
     echo "$name" | grep -qE "^[a-z][a-z0-9-]*$" || echo "  ❌ name 不符合 kebab-case: $name"
+  fi
+  # 检查 5（仅 skills）：name 字段与父目录名一致
+  if [ "$IS_SKILL" = "true" ]; then
+    skill_dir=$(dirname "$f")
+    expected_name=$(basename "$skill_dir")
+    skill_name=$(grep "^name:" "$f" | head -1 | sed 's/^name:[[:space:]]*//')
+    [ -n "$skill_name" ] && [ "$skill_name" != "$expected_name" ] && \
+      echo "  ⚠️ skill name 字段（$skill_name）与目录名（$expected_name）不一致"
+    # skills 不检查 model/tools 字段（这些字段在 SKILL.md 中不适用）
   fi
   echo ""
 done
@@ -401,8 +424,10 @@ if [ "$SELF_REF" = "false" ]; then
       PROPOSAL_SUBDIR="agents"
     elif echo "$f" | grep -q "/commands/"; then
       PROPOSAL_SUBDIR="commands"
+    elif echo "$f" | grep -q "/skills/"; then
+      PROPOSAL_SUBDIR="skills"
     else
-      echo "⚠️ 无法推断 proposals 子目录（非 agents/commands 路径：$f），跳过 proposal 扫描" >&2
+      echo "⚠️ 无法推断 proposals 子目录（非 agents/commands/skills 路径：$f），跳过 proposal 扫描" >&2
       continue
     fi
     # 查找 pending proposals（排除已处理：status: ✅ / applied / rejected）
@@ -452,8 +477,16 @@ fi
    > 被审查的是跨项目通用 skill/agent，应以"在任意项目中是否都有意义"为评审标准。
    > `.claude/commands/*.md` 是用户通过 `/command-name` 触发的 skill 指令（协调者角色，Claude 主进程执行）。
    > `.claude/agents/*.md` 是 YAML front-matter 定义的子 Agent（被 Task tool 调度，独立沙箱执行）。
+   > `~/.claude/skills/*/SKILL.md` 是注入到 Claude 上下文的指令文档，**不含 model/tools 字段**，无 subagent_type 概念。
    > Agent 间通过 `.claude/agent_scratch/` 下的临时文件传递数据。
    > **⚠️ 反熟悉度搜索要求**：评审对象与你运行的 pipeline 结构相同，存在"自我偏好偏差"风险——你可能对自身设计的结构给出更宽松的评价。请主动寻找与你设计直觉相悖的证据，对每个"通过"判断反问：是否有反例？是否有未覆盖的边界场景？
+
+   **目标文件类型说明**（协调者在传入各 Agent prompt 时，根据实际目标列表动态注入）：
+   - 若目标含 `SKILL.md`（路径含 `/skills/`）：
+     > ⚠️ 审查目标包含 SKILL.md 文件。SKILL.md 是注入到 Claude 上下文的指令文档，与 commands/agents 不同：
+     > - **不含 model/tools 字段**，S1 不检查模型选型和工具集匹配
+     > - **无 subagent_type**，S2 不检查 orchestration 数据契约
+     > - **审查重点调整**：指令清晰度（步骤是否无歧义）、边界覆盖（空输入/权限不足/文件不存在等）、用户交互节点（是否有确认/扩展提示）、description 是否能准确触发该 skill
 6. **findings 格式强制要求**：每条发现必须以 `### [P0]`/`### [P1]`/`### [P2]`/`### [P3]` 开头，协调者将在 Stage 1 完成后用 grep 验证格式合规性。
 7. **Proposal 上下文块**（Step 0g 产物，仅他指模式；自指模式传"无 pending proposals"）：
    - "已记录缺口"中的问题若在当前目标文件中**仍存在**，标注为"[已知，仍未修复]"作为 CONFIRMED 发现上报
