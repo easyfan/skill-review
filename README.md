@@ -1,6 +1,6 @@
 # skill-review
 
-Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, and command files.
+Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, command, and SKILL.md files.
 
 ## What it does
 
@@ -81,25 +81,33 @@ Restart your Claude Code session after installation for agents to take effect.
 ## Usage
 
 ```
-/skill-review [target_list|all|all-commands|all-agents]
+/skill-review [target_list|all|all-commands|all-agents|all-skills]
 ```
 
 **Examples:**
 
 ```bash
-# Review all commands and agents
+# Review all commands, agents, and skills
 /skill-review all
 
 # Review agents only
 /skill-review all-agents
 
-# Review specific skills (comma-separated, no spaces)
+# Review skills only (~/.claude/skills/*/SKILL.md)
+/skill-review all-skills
+
+# Review a specific skill by name
+/skill-review readme-i18n
+
+# Review specific targets (comma-separated, no spaces)
 /skill-review looper,patterns
 
 # Lightweight quick-check (enter "stop" after Stage 1 to skip Challenger)
 /skill-review looper
 # → enter "stop" after Stage 1 completes
 ```
+
+> **Skills** are identified by their directory name under `~/.claude/skills/` (e.g. `readme-i18n` maps to `~/.claude/skills/readme-i18n/SKILL.md`). The `model` and `tools` YAML fields are not required for SKILL.md files — the review adapts its criteria accordingly.
 
 ## Files installed
 
@@ -208,6 +216,18 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.4.0 (2026-03-31)
+
+Skills support — `~/.claude/skills/*/SKILL.md` files are now first-class review targets:
+
+| Item | Change |
+|------|--------|
+| Discovery | `~/.claude/skills/*/SKILL.md` scanned alongside commands/agents |
+| Selector | `all-skills` added; `all` now includes skills |
+| Format quick-check | Skips `model`/`tools` field checks for SKILL.md; validates `name` matches directory name |
+| Proposal routing | `~/.claude/proposals/skills/` added as a proposals subdirectory |
+| Stage 1 prompts | S1/S2 criteria adjusted for SKILL.md (no model selection / orchestration audit; focus on instruction clarity, edge-case coverage, description triggering) |
 
 ### v1.3.0 (2026-03-27)
 
