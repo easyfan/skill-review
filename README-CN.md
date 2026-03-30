@@ -1,6 +1,6 @@
 # skill-review
 
-Skills/Agents 设计委员会——对 Claude Code skill/agent/command 文件进行系统性多维质量审查。
+Skills/Agents 设计委员会——对 Claude Code skill/agent/command/SKILL.md 文件进行系统性多维质量审查。
 
 ## 功能
 
@@ -81,25 +81,33 @@ cp agents/*.md ~/.claude/agents/
 ## 使用
 
 ```
-/skill-review [target_list|all|all-commands|all-agents]
+/skill-review [target_list|all|all-commands|all-agents|all-skills]
 ```
 
 **示例**：
 
 ```bash
-# 审查所有 commands 和 agents
+# 审查所有 commands、agents 和 skills
 /skill-review all
 
 # 仅审查 agents
 /skill-review all-agents
 
-# 审查指定 skill（逗号分隔，不加空格）
+# 仅审查 skills（~/.claude/skills/*/SKILL.md）
+/skill-review all-skills
+
+# 审查指定 skill（按目录名）
+/skill-review readme-i18n
+
+# 审查多个目标（逗号分隔，不加空格）
 /skill-review looper,patterns
 
 # 轻量快检（Stage 1 完成后输入"停止"，跳过 Challenger）
 /skill-review looper
 # → Stage 1 完成后输入"停止"
 ```
+
+> **Skills** 以 `~/.claude/skills/` 下的目录名标识（如 `readme-i18n` 对应 `~/.claude/skills/readme-i18n/SKILL.md`）。SKILL.md 不需要 `model`/`tools` 字段，审查标准会自动适配。
 
 ## 安装的文件
 
@@ -208,6 +216,18 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.4.0（2026-03-31）
+
+Skills 支持——`~/.claude/skills/*/SKILL.md` 文件升级为一等公民审查目标：
+
+| 项目 | 变更 |
+|------|------|
+| 发现路径 | 新增扫描 `~/.claude/skills/*/SKILL.md` |
+| 选择器 | 新增 `all-skills`；`all` 现在包含 skills |
+| 格式快检 | SKILL.md 跳过 `model`/`tools` 字段检查；改为验证 `name` 与目录名一致性 |
+| Proposal 路由 | 新增 `~/.claude/proposals/skills/` 子目录 |
+| Stage 1 审计标准 | S1/S2 针对 SKILL.md 调整（不做模型选型/orchestration 链路审查，转为聚焦指令清晰度、边界覆盖、description 触发准确性）|
 
 ### v1.3.0（2026-03-27）
 
