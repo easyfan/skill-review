@@ -1,3 +1,0 @@
-#!/bin/bash
-# post-commit: intentionally a no-op
-# sha sync is handled by pre-push to avoid amend-induced unreachable shas
