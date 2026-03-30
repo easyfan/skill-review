@@ -1,31 +1,3 @@
 #!/bin/bash
-# post-commit: sync marketplace.json sha to HEAD after each commit
-
-MARKETPLACE=".claude-plugin/marketplace.json"
-[ -f "$MARKETPLACE" ] || exit 0
-
-SHA=$(git rev-parse HEAD)
-
-CURRENT=$(python3 -c "
-import json, sys
-try:
-  d = json.load(open('$MARKETPLACE'))
-  print(d['plugins'][0]['source']['sha'])
-except Exception:
-  print('')
-" 2>/dev/null)
-
-[ "$CURRENT" = "$SHA" ] && exit 0
-
-python3 -c "
-import json
-with open('$MARKETPLACE') as f:
-  d = json.load(f)
-d['plugins'][0]['source']['sha'] = '$SHA'
-with open('$MARKETPLACE', 'w') as f:
-  json.dump(d, f, indent=2, ensure_ascii=False)
-  f.write('\n')
-"
-
-git add "$MARKETPLACE"
-git commit --amend --no-edit --no-verify --quiet
+# post-commit: intentionally a no-op
+# sha sync is handled by pre-push to avoid amend-induced unreachable shas
