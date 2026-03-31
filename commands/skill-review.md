@@ -267,7 +267,23 @@ ls -la "$PROJECT_ROOT/.claude/commands/" "$PROJECT_ROOT/.claude/agents/" "$HOME/
 
 ```bash
 # 检测 cc-config-manager 模式
-[ -f "$PROJECT_ROOT/.claude/user-level-write" ] && ELEVATED=true || ELEVATED=false
+# 从 PROJECT_ROOT 向上递归查找 .claude/user-level-write，止于 claude 启动时的 cwd（CLAUDE_CWD）
+# CLAUDE_CWD 由环境变量传入；未设置时回退到 HOME，避免越界到系统目录
+CLAUDE_CWD="${CLAUDE_CWD:-$HOME}"
+ELEVATED=false
+_search_dir="$PROJECT_ROOT"
+while true; do
+  if [ -f "$_search_dir/.claude/user-level-write" ]; then
+    ELEVATED=true
+    break
+  fi
+  # 到达上界（CLAUDE_CWD）后停止
+  [ "$_search_dir" = "$CLAUDE_CWD" ] && break
+  # 防止越过根目录
+  [ "$_search_dir" = "/" ] && break
+  _search_dir="$(dirname "$_search_dir")"
+done
+unset _search_dir
 
 # 分类目标文件（TARGET_FILES 数组由 Step 0c 验证后赋值）
 USER_LEVEL_FILES=()    # ~/.claude/ 下的文件
@@ -286,10 +302,10 @@ done
 ```
 
 输出权限检测结果：
-- 若 `ELEVATED=true`：`[权限检测] 元项目模式（user-level-write 已授权），用户级文件可直接修改`
+- 若 `ELEVATED=true`：`[权限检测] 元项目模式（user-level-write 已授权，发现于 <找到的目录>），用户级文件可直接修改`
 - 若 `ELEVATED=false` 且 `USER_LEVEL_FILES` 非空：
   ```
-  [权限检测] 非元项目模式（.claude/user-level-write 不存在）
+  [权限检测] 非元项目模式（在 PROJECT_ROOT 及所有上级目录均未找到 .claude/user-level-write）
     用户级文件（N 个）：仅审查，发现写入 ~/.claude/proposals/ 而非直接修改
     项目级文件（M 个）：正常审查
   ```
