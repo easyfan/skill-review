@@ -125,9 +125,15 @@ Restart your Claude Code session after installation for agents to take effect.
 
 | Context | Behavior |
 |---------|----------|
-| Meta-project (`.claude/user-level-write` present) | Reporter may directly edit files under `~/.claude/` |
+| Meta-project (`user-level-write` found at or above `PROJECT_ROOT`) | Reporter may directly edit files under `~/.claude/` |
 | Regular project | Findings for user-level files written to `~/.claude/proposals/`; no direct edits |
 | Self-referential mode (reviewing the committee itself) | Reporter generates suggestions only; Edit is prohibited |
+
+`user-level-write` detection walks upward from the current `PROJECT_ROOT` to `CLAUDE_CWD`
+(the directory where Claude was launched; defaults to `$HOME` if unset). This means a
+meta-project marker at a workspace root (e.g. `cc_manager/.claude/user-level-write`) is
+correctly detected even when `/skill-review` is run from a sub-directory (e.g.
+`packer/readme-i18n`). Set `CLAUDE_CWD` explicitly to restrict the search boundary.
 
 ## Cost
 
@@ -195,7 +201,7 @@ bash install.sh --target /tmp/test-claude
 | 9 | Concurrent lock protection | Detects live process holding `lock.pid`; rejects second instance |
 | 10 | Cost warning gate | Outputs warning when file count > 15; waits for confirm or split |
 | 11 | Zero-findings fast path | Skips Challenger; Reporter outputs ⭐ grade |
-| 12 | Meta-project mode (ELEVATED) | `.claude/user-level-write` present → Reporter authorized to directly edit |
+| 12 | Meta-project mode (ELEVATED) | `user-level-write` found at or above `PROJECT_ROOT` → Reporter authorized to directly edit |
 | 13 | Non-meta-project mode | User-level file findings written to `proposals/` instead of direct edits |
 | 14 | Challenger failure | Outputs options A/B, waits for user choice; does not auto-skip |
 | 15 | Stage 3 auto-trigger | `modification_log.md` contains description change → assertion design triggered |
@@ -216,6 +222,14 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.4.1 (2026-03-31)
+
+Permission model fix — ELEVATED detection now walks up the directory tree:
+
+| Item | Change |
+|------|--------|
+| ELEVATED detection | Changed from exact `$PROJECT_ROOT/.claude/user-level-write` check to upward walk from `PROJECT_ROOT` to `CLAUDE_CWD` (env var, default `$HOME`) — fixes false-negative when running from a sub-directory of a meta-project |
 
 ### v1.4.0 (2026-03-31)
 

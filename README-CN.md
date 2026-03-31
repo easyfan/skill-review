@@ -125,9 +125,11 @@ cp agents/*.md ~/.claude/agents/
 
 | 场景 | 行为 |
 |------|------|
-| 元项目（`.claude/user-level-write` 存在）| Reporter 可直接修改 `~/.claude/` 下文件 |
+| 元项目（`PROJECT_ROOT` 或其上级目录存在 `user-level-write`）| Reporter 可直接修改 `~/.claude/` 下文件 |
 | 普通项目 | 用户级文件发现写入 `~/.claude/proposals/`，不直接修改 |
 | 自指模式（审查委员会自身）| Reporter 仅生成建议，禁止 Edit |
+
+`user-level-write` 检测从当前 `PROJECT_ROOT` 向上递归查找，止于 `CLAUDE_CWD`（Claude 启动时的工作目录；未设置时默认为 `$HOME`）。这意味着放在工作区根目录的元项目标记（如 `cc_manager/.claude/user-level-write`）在子目录（如 `packer/readme-i18n`）中运行 `/skill-review` 时也能被正确识别。可通过显式设置 `CLAUDE_CWD` 限制搜索上界。
 
 ## 成本提示
 
@@ -195,7 +197,7 @@ bash install.sh --target /tmp/test-claude
 | 9 | 并发锁保护 | 检测存活进程持有的 lock.pid，拒绝第二个实例 |
 | 10 | 成本警告门 | 文件数 > 15 时输出警告并等待确认/拆分 |
 | 11 | 零发现快路径 | 跳过 Challenger，Reporter 输出 ⭐ 等级 |
-| 12 | 元项目模式（ELEVATED） | `.claude/user-level-write` 存在时授权直接 Edit |
+| 12 | 元项目模式（ELEVATED） | `PROJECT_ROOT` 或其上级目录存在 `user-level-write` → Reporter 授权直接 Edit |
 | 13 | 非元项目模式 | 用户级文件发现写入 proposals/ 而非直接修改 |
 | 14 | Challenger 失败 | 输出选项 A/B，等待用户选择，不自动跳过 |
 | 15 | Stage 3 自动触发 | modification_log.md 含 description 变更时触发断言设计 |
@@ -216,6 +218,14 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.4.1（2026-03-31）
+
+权限模型修复——ELEVATED 检测改为向上递归：
+
+| ID | 项目 | 变更 |
+|----|------|------|
+| FIX-09 | ELEVATED 检测 | 从精确匹配 `$PROJECT_ROOT/.claude/user-level-write` 改为从 `PROJECT_ROOT` 向上递归查找到 `CLAUDE_CWD`（环境变量，默认 `$HOME`）——修复在元项目子目录运行时误判为非元项目的问题 |
 
 ### v1.4.0（2026-03-31）
 
