@@ -26,6 +26,7 @@
     ".claude-plugin/",
     "commands/",
     "agents/",
+    "skills/",
     "SKILL.md",
     "install.sh"
   ],

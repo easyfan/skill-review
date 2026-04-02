@@ -1,11 +1,12 @@
 ---
 name: validate-plugin-manifest
 description: >
-  Validate Claude Code plugin manifest files (plugin.json and marketplace.json) against their
-  strict schemas with type checking. Use this skill whenever the user wants to validate a plugin
-  before publishing, after editing plugin.json or marketplace.json, after cloning a plugin repo,
-  or when a /plugin install fails with schema/validation errors. Also trigger proactively after
-  any edit to .claude-plugin/ files.
+  Validate Claude Code plugin manifest files and installer completeness. Checks plugin.json and
+  marketplace.json against strict schemas with type checking, AND checks install.sh interface
+  compliance, installed file completeness, and package.json files field coverage. Use whenever
+  the user wants to validate a plugin before publishing, after editing .claude-plugin/ files,
+  after cloning a plugin repo, or when /plugin install fails. Also trigger proactively after
+  any edit to .claude-plugin/, install.sh, or package.json.
 ---
 
 # validate-plugin-manifest
@@ -24,7 +25,9 @@ adds **type-level** validation of every field value.
 3. Run the field-level checks below. Collect ALL errors before reporting — do not stop at the
    first error.
 
-4. Report results using the output format at the end of this file.
+4. Run the installer completeness checks below.
+
+5. Report results using the output format at the end of this file.
 
 ---
 
@@ -85,6 +88,78 @@ Fields that look plausible but are **not** in the schema and will fail validatio
 
 ---
 
+## Installer completeness checks
+
+These checks validate that the plugin can be installed correctly via both the CC UI (`/plugin install`)
+and the manual `bash install.sh` path. They are based on real installation failures observed in
+production (see cases below).
+
+### install.sh interface compliance
+
+Read `install.sh`. Verify it handles all of the following:
+
+- **No-arg install** — running `bash install.sh` with no arguments must install files to
+  `${CLAUDE_DIR:-$HOME/.claude}`. This is how CC UI calls it.
+- **`--dry-run`** — must preview without writing any files. Missing this blocks safe pre-flight
+  testing.
+- **`--uninstall`** — must remove installed files. Without this, users cannot cleanly uninstall
+  via script (the CC UI Remove button relies on `installed_plugins.json`, which only exists after
+  a successful UI install; manual installs have no other removal path).
+- **`--target=<path>` or `CLAUDE_DIR=<path>`** — must accept a custom install directory (at least
+  one form). Required by packer test pipelines.
+
+> **Case:** skill-review's original install.sh only had `--target`, missing `--dry-run` and
+> `--uninstall`. Users who installed manually had no way to uninstall via script.
+
+### Installed file completeness
+
+1. Read all `cp` / `mkdir` / file-write operations in `install.sh` to determine the set of files
+   it installs.
+2. Also scan the repo for installable directories: `commands/`, `agents/`, `skills/`. For each,
+   list the `.md` files found.
+3. Compare: every `.md` file in `commands/`, `agents/`, and every `SKILL.md` under `skills/`
+   **must** appear in an install operation. Report any that are missing.
+
+> **Case:** skill-review had `skills/validate-plugin-manifest/SKILL.md` in the repo but install.sh
+> never copied it to `~/.claude/skills/`. The skill was invisible to users after installation.
+
+### package.json `files` field coverage
+
+Read `package.json`. If a `files` array is present, verify it covers every directory/file that
+`install.sh` installs. Common omissions:
+
+- A `skills/` directory added to install.sh but not added to `files`
+- `AGENTS.md` present but not listed
+- `evals/` directory not listed (low severity — does not affect install, but breaks `npm publish`)
+
+> **Case:** skill-review `package.json` listed `commands/`, `agents/`, `SKILL.md` in `files`,
+> but omitted `skills/` after the validate-plugin-manifest skill was added. This means
+> `npm publish` would silently exclude the new skill.
+
+### Cache directory structure (post-install check)
+
+This check is relevant when diagnosing a failed `/plugin install` in another project.
+
+If `~/.claude/plugins/cache/{marketplaceName}/` exists AND contains both:
+- A `.git` directory at the top level (i.e., a full git clone at the root), AND
+- A `{pluginName}/` subdirectory (the versioned plugin cache)
+
+then the cache is **corrupt**: the marketplace clone and the plugin versioned cache share a
+parent-child path. Any subsequent install attempt that copies from the versioned cache will
+recurse into itself, producing `ENAMETOOLONG: name too long` errors with infinitely nested paths.
+
+**Fix:** Delete all files and `.git` at the top level of `cache/{marketplaceName}/`, leaving only
+the `{pluginName}/` subdirectory.
+
+> **Case:** `~/.claude/plugins/cache/news-digest/` contained a full git clone (with `.git`,
+> `install.sh`, `package.json`, etc.) at the root, alongside `news-digest/1.1.0/` as the
+> versioned plugin cache. Installing news-digest from any other project triggered recursive
+> path nesting: `news-digest/1.1.0/news-digest/1.1.0/news-digest/1.1.0/...` until the OS
+> path length limit was hit. Same issue affected `readme-i18n`. `skill-review` was not affected
+> because its cache was initialized correctly.
+
+---
+
 ## Output format
 
 ```
@@ -96,11 +171,22 @@ Fields that look plausible but are **not** in the schema and will fail validatio
 ### marketplace.json — [PASS ✓ | FAIL ✗ | MISSING]
 <errors, one per line>
 
-### Summary
-- Errors: N
-- Warnings: N (fields present but not in schema — won't block install)
+### install.sh interface — [PASS ✓ | FAIL ✗ | MISSING]
+- --dry-run: [present / MISSING]
+- --uninstall: [present / MISSING]
+- --target / CLAUDE_DIR: [present / MISSING]
 
-<If PASS on both>: Ready to publish. Run /plugin marketplace update + /plugin install to verify.
+### Installed file completeness — [PASS ✓ | FAIL ✗]
+<list any .md files in commands/, agents/, skills/ that install.sh does NOT install>
+
+### package.json files field — [PASS ✓ | WARN ⚠ | MISSING]
+<list any directories/files installed by install.sh that are absent from files[]>
+
+### Summary
+- Errors: N   (block install or uninstall)
+- Warnings: N (won't block install, but affect publish or usability)
+
+<If all PASS>: Ready to publish. Run /plugin marketplace update + /plugin install to verify.
 <If any FAIL>: Fix the above errors before pushing.
 ```
 
