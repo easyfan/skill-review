@@ -2,7 +2,6 @@
   "name": "skill-review",
   "version": "1.3.0",
   "description": "Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, and command files",
-  "install": "bash install.sh",
   "author": {
     "name": "cc-meta-project"
   },
