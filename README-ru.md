@@ -42,12 +42,12 @@ cd skill-review
 bash install.sh
 ```
 
-Установка в указанный каталог (`CLAUDE_DIR` имеет приоритет над `--target`):
+Установка в указанный каталог (`CLAUDE_DIR` имеет приоритет над `--target=`):
 
 ```bash
 CLAUDE_DIR=~/.claude bash install.sh
 # или
-bash install.sh --target ~/.claude
+bash install.sh --target=~/.claude
 ```
 
 > ✅ **Проверено**: покрыто конвейером skill-test (looper Stage 5).
@@ -105,6 +105,7 @@ cp agents/*.md ~/.claude/agents/
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 аудитор удобства использования (sonnet) |
 | `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (**opus**) |
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — сводный отчёт + прямые правки (sonnet + **Edit**) |
+| `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill для валидации манифестов плагинов и проверки соответствия install.sh |
 
 ## Модель разрешений
 

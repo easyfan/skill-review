@@ -42,12 +42,12 @@ cd skill-review
 bash install.sh
 ```
 
-Installation dans un répertoire spécifique (`CLAUDE_DIR` est prioritaire sur `--target`) :
+Installation dans un répertoire spécifique (`CLAUDE_DIR` est prioritaire sur `--target=`) :
 
 ```bash
 CLAUDE_DIR=~/.claude bash install.sh
 # ou
-bash install.sh --target ~/.claude
+bash install.sh --target=~/.claude
 ```
 
 > ✅ **Vérifié** : couvert par le pipeline skill-test (looper Stage 5).
@@ -105,6 +105,7 @@ Redémarrer la session Claude Code après l'installation pour que les agents pre
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 auditeur utilisabilité (sonnet) |
 | `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (**opus**) |
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — rapport consolidé + éditions directes (sonnet + **Edit**) |
+| `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill de validation des manifests plugin et conformité install.sh |
 
 ## Modèle de permissions
 

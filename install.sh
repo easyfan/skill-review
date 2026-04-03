@@ -5,40 +5,46 @@ set -euo pipefail
 # ✅ Verified by automated tests: this install path is covered by the skill-test pipeline (looper Stage 5).
 #
 # Usage:
-#   bash install.sh [--target <claude_home>]
+#   bash install.sh [--target=<claude_home>]
 #   bash install.sh --dry-run
-#   bash install.sh --uninstall [--target <claude_home>]
+#   bash install.sh --uninstall [--target=<claude_home>]
 #   CLAUDE_DIR=<claude_home> bash install.sh      # packer convention (lower priority than --target)
 #
 # Installs:
-#   commands/skill-review.md       → <claude_home>/commands/skill-review.md
-#   agents/skill-reviewer-s1.md   → <claude_home>/agents/skill-reviewer-s1.md
-#   agents/skill-reviewer-s2.md   → <claude_home>/agents/skill-reviewer-s2.md
-#   agents/skill-researcher.md    → <claude_home>/agents/skill-researcher.md
-#   agents/skill-reviewer-s4.md   → <claude_home>/agents/skill-reviewer-s4.md
-#   agents/skill-challenger.md    → <claude_home>/agents/skill-challenger.md
-#   agents/skill-reporter.md      → <claude_home>/agents/skill-reporter.md
+#   commands/skill-review.md         → <claude_home>/commands/skill-review.md
+#   agents/skill-reviewer-s1.md      → <claude_home>/agents/skill-reviewer-s1.md
+#   agents/skill-reviewer-s2.md      → <claude_home>/agents/skill-reviewer-s2.md
+#   agents/skill-researcher.md       → <claude_home>/agents/skill-researcher.md
+#   agents/skill-reviewer-s4.md      → <claude_home>/agents/skill-reviewer-s4.md
+#   agents/skill-challenger.md       → <claude_home>/agents/skill-challenger.md
+#   agents/skill-reporter.md         → <claude_home>/agents/skill-reporter.md
 #   skills/validate-plugin-manifest/ → <claude_home>/skills/validate-plugin-manifest/
 
 TARGET="${CLAUDE_DIR:-${HOME}/.claude}"
 DRY_RUN=false
 UNINSTALL=false
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --target)    TARGET="$2"; shift 2 ;;
-    --target=*)  TARGET="${1#--target=}"; shift ;;
-    --dry-run)   DRY_RUN=true; shift ;;
-    --uninstall) UNINSTALL=true; shift ;;
+# ── Resolve real script dir (symlink-safe) ────────────────────────────────────
+SCRIPT_PATH="$0"
+while [ -L "$SCRIPT_PATH" ]; do
+  link_dir="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+  [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$link_dir/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+for arg in "$@"; do
+  case "$arg" in
+    --target=*)  TARGET="${arg#--target=}" ;;
+    --dry-run)   DRY_RUN=true ;;
+    --uninstall) UNINSTALL=true ;;
     --help|-h)
-      echo "Usage: bash install.sh [--target <path>] [--dry-run] [--uninstall]"
+      echo "Usage: bash install.sh [--target=<path>] [--dry-run] [--uninstall]"
       echo "  CLAUDE_DIR=<path> bash install.sh   # custom Claude config dir"
       exit 0 ;;
-    *) echo "Unknown arg: $1"; exit 1 ;;
+    *) echo "Unknown arg: $arg"; exit 1 ;;
   esac
 done
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ok()   { printf "  \033[32m✓\033[0m %s\n" "$*"; }
 skip() { printf "  \033[2m– %s (up to date)\033[0m\n" "$*"; }

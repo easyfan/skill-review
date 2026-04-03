@@ -57,12 +57,12 @@ cd skill-review
 bash install.sh
 ```
 
-安装到指定目录（`CLAUDE_DIR` 优先于 `--target`）：
+安装到指定目录（`CLAUDE_DIR` 优先于 `--target=`）：
 
 ```bash
 CLAUDE_DIR=~/.claude bash install.sh
 # 或
-bash install.sh --target ~/.claude
+bash install.sh --target=~/.claude
 ```
 
 > ✅ **已验证**：已通过 skill-test 流水线自动化验证（looper Stage 5）。
@@ -120,6 +120,7 @@ cp agents/*.md ~/.claude/agents/
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 可用性审计员（sonnet）|
 | `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger 挑战者（**opus**）|
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter 汇总报告员（sonnet + **Edit**）|
+| `skills/validate-plugin-manifest/` | `~/.claude/skills/` | 插件 manifest 和 install.sh 合规性验证 skill |
 
 ## 权限模型
 
