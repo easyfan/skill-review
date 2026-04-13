@@ -25,18 +25,18 @@ Quality grades: 🔴 Unusable / 🟡 Usable with defects / 🟢 Production-ready
 
 | Dependency | Required | Purpose |
 |------------|----------|---------|
-| [skill-shinker](https://github.com/easyfan/skill-shinker) | **Required** for files >400 lines | skill-review gates review entry at 400 lines and instructs users to run `/skill-shrink` first. Without skill-shrink installed, files >400 lines cannot be reviewed. |
+| [skill-shrinker](https://github.com/easyfan/skill-shrinker) | **Required** for files >400 lines | skill-review gates review entry at 400 lines and instructs users to run `/skill-shrink` first. Without skill-shrink installed, files >400 lines cannot be reviewed. |
 
 Install skill-shrink before (or alongside) skill-review:
 
 ```bash
 # Option A — marketplace
-/plugin marketplace add easyfan/skill-shinker
-/plugin install skill-shinker@latest
+/plugin marketplace add easyfan/skill-shrinker
+/plugin install skill-shrinker@latest
 
 # Option B — script
-git clone https://github.com/easyfan/skill-shinker.git
-bash skill-shinker/install.sh
+git clone https://github.com/easyfan/skill-shrinker.git
+bash skill-shrinker/install.sh
 ```
 
 ## Install
@@ -251,7 +251,7 @@ Hard gate on oversized targets — skill-shrink is now a required companion:
 | 400-line gate | Step 0c-1 upgraded: any target file >400 lines triggers a hard exit with instructions to run `/skill-shrink` first. Previously only a soft warning at >440 lines. |
 | 221–400 line range | Continues with a ⚠️ quality warning (no change to flow). |
 | install.sh | Post-install check detects whether skill-shrink is installed; warns if missing. |
-| Prerequisite | skill-shinker (`easyfan/skill-shinker`) is now a required dependency for reviewing files >400 lines. |
+| Prerequisite | skill-shrinker (`easyfan/skill-shrinker`) is now a required dependency for reviewing files >400 lines. |
 
 ### v1.4.1 (2026-03-31)
 

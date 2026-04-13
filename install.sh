@@ -144,8 +144,8 @@ if [ -f "$TARGET/skills/skill-shrink/SKILL.md" ]; then
 else
   warn "skill-shrink not installed"
   warn "skill-review will refuse to review files >400 lines without it."
-  warn "Install skill-shrink: bash install.sh  (from easyfan/skill-shinker)"
-  warn "  or: /plugin marketplace add easyfan/skill-shinker"
+  warn "Install skill-shrink: bash install.sh  (from easyfan/skill-shrinker)"
+  warn "  or: /plugin marketplace add easyfan/skill-shrinker"
 fi
 
 # ── Footer ─────────────────────────────────────────────────────────────────
