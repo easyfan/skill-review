@@ -21,6 +21,24 @@ Skills/Agents Design Committee — systematic multi-dimensional quality review f
 
 Quality grades: 🔴 Unusable / 🟡 Usable with defects / 🟢 Production-ready / ⭐ Excellent
 
+## Prerequisites
+
+| Dependency | Required | Purpose |
+|------------|----------|---------|
+| [skill-shinker](https://github.com/easyfan/skill-shinker) | **Required** for files >400 lines | skill-review gates review entry at 400 lines and instructs users to run `/skill-shrink` first. Without skill-shrink installed, files >400 lines cannot be reviewed. |
+
+Install skill-shrink before (or alongside) skill-review:
+
+```bash
+# Option A — marketplace
+/plugin marketplace add easyfan/skill-shinker
+/plugin install skill-shinker@latest
+
+# Option B — script
+git clone https://github.com/easyfan/skill-shinker.git
+bash skill-shinker/install.sh
+```
+
 ## Install
 
 <!--
@@ -47,7 +65,7 @@ Run inside a Claude Code session:
 /plugin install skill-review@skill-review
 ```
 
-> ⚠️ **Not verified by automated tests**: `/plugin` is a Claude Code REPL built-in and cannot be invoked via `claude -p`. Run manually in a Claude Code session; not covered by skill-test pipeline (looper Stage 5).
+> ⚠️ **Partially covered by automated tests**: The underlying `claude plugin install` CLI path is verified by looper T2b (Plan B). The `/plugin` REPL entry point (interactive UI) cannot be tested via `claude -p` and must be verified manually in a Claude Code session.
 
 ### Option B — install script
 
@@ -223,6 +241,17 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.5.0 (2026-04-14)
+
+Hard gate on oversized targets — skill-shrink is now a required companion:
+
+| Item | Change |
+|------|--------|
+| 400-line gate | Step 0c-1 upgraded: any target file >400 lines triggers a hard exit with instructions to run `/skill-shrink` first. Previously only a soft warning at >440 lines. |
+| 221–400 line range | Continues with a ⚠️ quality warning (no change to flow). |
+| install.sh | Post-install check detects whether skill-shrink is installed; warns if missing. |
+| Prerequisite | skill-shinker (`easyfan/skill-shinker`) is now a required dependency for reviewing files >400 lines. |
 
 ### v1.4.1 (2026-03-31)
 

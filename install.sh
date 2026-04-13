@@ -48,6 +48,7 @@ done
 
 ok()   { printf "  \033[32m✓\033[0m %s\n" "$*"; }
 skip() { printf "  \033[2m– %s (up to date)\033[0m\n" "$*"; }
+warn() { printf "  \033[33m⚠\033[0m  %s\n" "$*"; }
 info() { printf "  %s\n" "$*"; }
 run()  { $DRY_RUN || "$@"; }
 
@@ -134,6 +135,17 @@ else
   run cp -r "$skill_src/." "$skill_dst/"
   ok "skills/validate-plugin-manifest → $skill_dst"
   changed=$((changed + 1))
+fi
+
+# ── skill-shrink dependency check ──────────────────────────────────────────
+echo ""
+if [ -f "$TARGET/skills/skill-shrink/SKILL.md" ]; then
+  ok "skill-shrink detected — files >400 lines will be auto-gated before review"
+else
+  warn "skill-shrink not installed"
+  warn "skill-review will refuse to review files >400 lines without it."
+  warn "Install skill-shrink: bash install.sh  (from easyfan/skill-shinker)"
+  warn "  or: /plugin marketplace add easyfan/skill-shinker"
 fi
 
 # ── Footer ─────────────────────────────────────────────────────────────────
