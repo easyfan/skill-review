@@ -155,7 +155,7 @@ if $DRY_RUN; then
 else
   echo "  Done! $changed item(s) installed."
   echo ""
-  echo "  Usage: /skill-review [target_list|all|all-commands|all-agents]"
+  echo "  Usage: /skill-review [target_list|all|all-commands|all-agents|all-skills]"
   echo "  Example: /skill-review all"
 fi
 echo ""

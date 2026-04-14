@@ -32,7 +32,7 @@ Skills/Agents Design Committee — систематическая многоме
 /plugin install skill-review@skill-review
 ```
 
-> ⚠️ **Не проверено автоматическими тестами**: `/plugin` — встроенная команда REPL Claude Code, недоступная через `claude -p`. Запускать вручную в сессии Claude Code; не охвачено конвейером skill-test (looper Stage 5).
+> ⚠️ **Частично покрыто автоматизированными тестами**: Базовый CLI-путь `claude plugin install` проверяется looper T2b (Plan B). Точка входа REPL `/plugin` (интерактивный UI) не может быть протестирована через `claude -p` и требует ручной проверки в сессии Claude Code.
 
 ### Вариант Б — Скрипт установки
 
@@ -158,6 +158,14 @@ bash install.sh --target /tmp/test-claude
 ```
 
 ## Changelog
+
+### v1.6.0 (2026-04-14)
+
+Quality and robustness improvements — all self-referential committee review findings applied (CONFIRMED P1×4, P2×10, P3×7). Key changes: mandatory parallel constraint for Stage 1 Agent calls, explicit `CHALLENGER_FAILED` preread branch in Step 2b, active-voice placeholder write subject, mid-point summary template, extended description trigger coverage, dead `TOTAL_LINES` variable removed, `trap` for lockfile cleanup on all exit paths, A/B/C/D strategies inline-defined, self-ref path detection, Stage 3 tool call budget check.
+
+### v1.5.0 (2026-04-14)
+
+Hard gate on oversized targets — skill-shrink is now a required companion: any target file >400 lines triggers a hard exit with instructions to run `/skill-shrink` first. Post-install check detects whether skill-shrink is installed.
 
 ### v1.4.1 (2026-03-31)
 

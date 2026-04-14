@@ -242,6 +242,27 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.6.0 (2026-04-14)
+
+Quality and robustness improvements — all findings from the self-referential committee review (self-ref mode CONFIRMED P1 × 4, P2 × 10, P3 × 7):
+
+| Item | Change |
+|------|--------|
+| Parallel constraint | Stage 1 launch now explicitly requires all 4 Agent calls in a single `function_calls` array within one response turn — prevents accidental serial execution |
+| Challenger failure branch | Step 2b: explicit condition for `CHALLENGER_FAILED` status — skips `challenger_response.md` preread, inlines status string, removes the file from Reporter params |
+| Placeholder write subject | Placeholder write on missing `sN_findings.md` changed from passive to active: coordinator checks after all 4 Agents return and writes via Write tool |
+| Mid-point summary template | Structured markdown template added: auditor status row, P0/P1/P2/P3 layered list, confirmation prompt. Marked as "required interactive node — no unattended mode" |
+| description | Extended to intent-based phrasing covering "review 一下", "检查", "帮我看看" etc.; cost note updated to "$0.5-2+ USD depending on target count" |
+| Dead code removed | `TOTAL_LINES` variable in Step 0c-1 removed; threshold constants annotated with rationale |
+| grep fallback | Step 2b grep: `-B1` → `-B3`; empty-match fallback to full first-200-line read added |
+| A/B/C/D strategies | Step 2a-pre overload strategies now inline-defined (A: slim P0/P1 only, B: batch 5 files, C: skip Challenger, D: terminate) |
+| Self-ref detection | Path-based detection added: any target under `~/.claude/skills/skill-review/` also triggers self-ref mode; user-visible notice added |
+| Lockfile trap | `trap 'rm -f lock.pid' EXIT` registered in Step 0b — covers credential-check abort, user "stop" exit, and all other exit paths |
+| Stage 3 budget | Coordinator now verifies ≥3 tool call budget before Stage 3; skips with note if insufficient |
+| Reporter next steps | Format spec added: ≤5 items, priority-sorted, each with corresponding skill command |
+| S3 table note | S3 WebSearch annotation clarified; `skill-researcher` subagent_type exception documented |
+| Constraint log comment | Self-ref constraint log line annotated: "audit log only — constraint is in Reporter prompt" |
+
 ### v1.5.0 (2026-04-14)
 
 Hard gate on oversized targets — skill-shrink is now a required companion:

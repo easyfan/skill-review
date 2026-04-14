@@ -32,7 +32,7 @@ Niveaux de qualité : 🔴 Inutilisable / 🟡 Utilisable avec défauts / 🟢 P
 /plugin install skill-review@skill-review
 ```
 
-> ⚠️ **Non vérifié par des tests automatisés** : `/plugin` est une commande intégrée du REPL Claude Code et ne peut pas être invoquée via `claude -p`. À exécuter manuellement dans une session Claude Code ; non couvert par le pipeline skill-test (looper Stage 5).
+> ⚠️ **Partiellement couvert par des tests automatisés** : Le chemin CLI sous-jacent `claude plugin install` est vérifié par looper T2b (Plan B). Le point d'entrée REPL `/plugin` (interface interactive) ne peut pas être testé via `claude -p` et doit être vérifié manuellement dans une session Claude Code.
 
 ### Option B — Script d'installation
 
@@ -158,6 +158,14 @@ bash install.sh --target /tmp/test-claude
 ```
 
 ## Changelog
+
+### v1.6.0 (2026-04-14)
+
+Quality and robustness improvements — all self-referential committee review findings applied (CONFIRMED P1×4, P2×10, P3×7). Key changes: mandatory parallel constraint for Stage 1 Agent calls, explicit `CHALLENGER_FAILED` preread branch in Step 2b, active-voice placeholder write subject, mid-point summary template, extended description trigger coverage, dead `TOTAL_LINES` variable removed, `trap` for lockfile cleanup on all exit paths, A/B/C/D strategies inline-defined, self-ref path detection, Stage 3 tool call budget check.
+
+### v1.5.0 (2026-04-14)
+
+Hard gate on oversized targets — skill-shrink is now a required companion: any target file >400 lines triggers a hard exit with instructions to run `/skill-shrink` first. Post-install check detects whether skill-shrink is installed.
 
 ### v1.4.1 (2026-03-31)
 

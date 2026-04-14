@@ -47,7 +47,7 @@ npx skill-review
 /plugin install skill-review@skill-review
 ```
 
-> ⚠️ **未经自动化验证**：`/plugin` 是 Claude Code REPL 内置命令，无法通过 `claude -p` 调用，需在 Claude Code 会话中手动执行；不在 skill-test 流水线（looper Stage 5）覆盖范围内。
+> ⚠️ **部分自动化测试覆盖**：底层 `claude plugin install` CLI 路径已被 looper T2b（Plan B）验证。`/plugin` REPL 入口点（交互界面）无法通过 `claude -p` 测试，需在 Claude Code 会话中手动确认。
 
 ### Option B — 本地脚本
 
@@ -219,6 +219,38 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.6.0（2026-04-14）
+
+质量与健壮性改进——自指委员会审查所有发现已全部应用（CONFIRMED P1×4、P2×10、P3×7）：
+
+| 项目 | 变更 |
+|------|------|
+| 并行调用强制约束 | Stage 1 启动新增强制性说明：4 次 Agent 调用必须在协调者同一 turn 内以 `function_calls` 数组并发发出，防止意外串行执行 |
+| Challenger 失败条件分支 | Step 2b 新增显式 `CHALLENGER_FAILED` 分支：跳过 `challenger_response.md` 预读，内联状态字符串，Reporter 传参中省略该文件 |
+| 占位写入主体明确化 | `sN_findings.md` 缺失时的占位写入由被动语态改为主动：协调者在 4 个 Agent 均返回后检查并写入（Write tool）|
+| 中场汇总模板 | 新增结构化 markdown 模板：审计员状态行、P0/P1/P2/P3 分层列表、确认提示；标注为"必要交互节点，不支持无人值守模式" |
+| description 改进 | 改为意图描述式写法，覆盖"review 一下"、"检查"、"帮我看看"等自然语言变体；成本标注改为"约 $0.5-2+ USD（视目标数量而定）" |
+| 删除死代码 | Step 0c-1 中 `TOTAL_LINES` 变量已删除；阈值常量新增注释说明理论依据 |
+| grep 回退 | Step 2b grep：`-B1` 改 `-B3`；新增空匹配回退（回退为全量读取前 200 行）|
+| A/B/C/D 策略内联定义 | Step 2a-pre 超标时的策略选项现已内联定义（A: 精简仅 P0/P1、B: 分批 5 个文件、C: 跳过 Challenger、D: 终止）|
+| 自指检测增强 | 新增路径检测：凡目标位于 `~/.claude/skills/skill-review/` 下均触发自指模式；用户可见通知明确指出 |
+| Lockfile trap | Step 0b 注册 `trap 'rm -f lock.pid' EXIT`，覆盖凭证检测中断、用户"停止"退出等所有退出路径 |
+| Stage 3 工具预算 | 协调者在 Stage 2b 结束后验证剩余工具调用配额（≥3），不足时跳过 Stage 3 并标注 |
+| Reporter 下一步建议规范 | 新增格式规范：最多 5 条、按优先级排序、每条附对应 skill 命令 |
+| S3 表格注释 | WebSearch 权限注释改为"S3 subagent 自带 WebSearch 权限"；`skill-researcher` subagent_type 例外标注 |
+| 约束日志注释 | 自指约束日志行新增注释："仅为审计日志，约束在 Reporter prompt 中实现" |
+
+### v1.5.0（2026-04-14）
+
+超大文件硬门控——skill-shrink 升级为必要依赖：
+
+| 项目 | 变更 |
+|------|------|
+| 400 行门控 | Step 0c-1 升级：任意目标文件 >400 行触发硬退出并提示先运行 `/skill-shrink`。此前为 >440 行时的软警告。 |
+| 221–400 行范围 | 继续执行，输出 ⚠️ 质量警告（流程无变化）|
+| install.sh | 安装后检测 skill-shrink 是否已安装；未装时给出警告 |
+| 依赖声明 | skill-shrinker（`easyfan/skill-shrinker`）现为 >400 行文件审查的必要依赖 |
 
 ### v1.4.1（2026-03-31）
 
