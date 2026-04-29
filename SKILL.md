@@ -44,8 +44,10 @@ Stage 3 │  Grader (optional) — assertion design (triggered on description ch
 |--------|-------|--------|
 | S1/S2/S4 | sonnet | Document analysis; no high-cost reasoning needed |
 | S3 | sonnet | External search research; sonnet is sufficient |
-| Challenger | opus | Adversarial verification requires stronger reasoning |
+| Challenger | sonnet | Adversarial verification; opus was over-budget for this task |
 | Reporter | sonnet | Consolidated report + file Edit; primarily coordination |
+
+> **Note**: Challenger's `description` still says "opus model" for historical reasons, but the agent frontmatter uses `model: sonnet`. The description is intentionally not updated to avoid triggering Stage 3 assertion regeneration on every review.
 
 ## Prerequisites
 
@@ -62,9 +64,26 @@ When review targets include committee files themselves (skill-review, skill-revi
 - Reporter generates suggestions only — **direct Edit is prohibited**
 - Project CLAUDE.md is not passed in (prevents project bias from affecting review of general-purpose tools)
 
+## Gotcha mechanism (v1.7+)
+
+Coordinator can pass a `gotcha_context.md` to Challenger, containing known failure patterns with historical priority floors. When a finding matches a gotcha:
+
+- Challenger **may not DISPUTE below the gotcha's recorded priority** (e.g., a P0 gotcha cannot be downgraded)
+- DISPUTE requires "structural elimination" proof: the root cause must be architecturally impossible in the current skill, not merely absent from the current file
+- DISPUTE of a gotcha must be annotated with `[GOTCHA OVERRIDE: <gotcha_id>]` and cite specific line evidence
+
+This prevents recurrence of previously-confirmed failure modes being silently cleared in future reviews.
+
+## File write discipline (v1.7+)
+
+Both Challenger and Reporter use `Bash` heredoc writes instead of the `Write` tool. Reason: `Write` tool may produce an empty `{}` when output token budget is exhausted in large contexts, resulting in silent data loss. The heredoc pattern (`cat > file << 'EOF' ... EOF`) is immune to this failure mode.
+
+For content >2000 characters, agents split into multiple `cat >>` appends.
+
 ## Purpose
 
 Systematic quality assessment of installed skill/agent files, producing:
 - Stage 1: four-dimensional parallel findings (definition quality / chain audit / external benchmarking / usability)
 - Stage 2: Challenger adversarial verification + Reporter consolidated report + direct fixes
 - Quality grade: 🔴 Unusable / 🟡 Usable with defects / 🟢 Production-ready / ⭐ Excellent
+- Gotcha protection: known failure modes maintain historical priority floors across reviews

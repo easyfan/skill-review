@@ -13,7 +13,7 @@ Skills/Agents 设计委员会——对 Claude Code skill/agent/command/SKILL.md 
 - S4 可用性：UX、输出格式、错误处理、进度反馈
 
 **Stage 2（串行）**：
-- Challenger（opus）：对 P0/P1 发现做 CONFIRM/DISPUTE/UNVERIFIABLE 裁定
+- Challenger（sonnet）：对 P0/P1 发现做 CONFIRM/DISPUTE/UNVERIFIABLE 裁定
 - Reporter：综合报告 + 直接修复已确认问题
 
 **Stage 3（条件）**：
@@ -118,7 +118,7 @@ cp agents/*.md ~/.claude/agents/
 | `agents/skill-reviewer-s2.md` | `~/.claude/agents/` | S2 互动链路审计员（sonnet）|
 | `agents/skill-researcher.md` | `~/.claude/agents/` | S3 外部前沿研究专员（sonnet + WebSearch）|
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 可用性审计员（sonnet）|
-| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger 挑战者（**opus**）|
+| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger 挑战者（sonnet）|
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter 汇总报告员（sonnet + **Edit**）|
 | `skills/validate-plugin-manifest/` | `~/.claude/skills/` | 插件 manifest 和 install.sh 合规性验证 skill |
 
@@ -135,7 +135,7 @@ cp agents/*.md ~/.claude/agents/
 ## 成本提示
 
 - Stage 1：4 个 sonnet Agent 并行，粗估 $0.1-0.5 USD
-- Stage 2 Challenger：**opus 模型**，粗估 $0.5-2 USD（约为 sonnet 的 5 倍）
+- Stage 2 Challenger：sonnet 模型，粗估 $0.1-0.5 USD
 - 如需低成本快检：Stage 1 完成后输入"停止"，跳过 Challenger
 - 目标文件数 > 15 时会触发成本警告，可选择分批执行
 
@@ -219,6 +219,19 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.7.0（2026-04-30）
+
+Challenger 健壮性——Gotcha 机制与写入可靠性修复：
+
+| 项目 | 变更 |
+|------|------|
+| Gotcha 机制 | Challenger 现接受协调者传入的 `gotcha_context.md`；已知失效模式维持历史优先级下限——P0 gotcha 不得在未提供"结构性消除"证明时降级为 P1/P2 |
+| GOTCHA OVERRIDE 标注 | DISPUTE 一条 gotcha 时，必须注明 `[GOTCHA OVERRIDE: <id>]` 并引用证明根因已被架构性排除的具体行号证据 |
+| Challenger 模型 | 前置声明由 `model: opus` 改为 `model: sonnet`（opus 成本超预期；对抗性验证质量由裁定逻辑驱动，而非模型等级） |
+| Bash 写文件纪律 | Challenger 和 Reporter 的所有文件写入改用 `Bash` heredoc，不再使用 `Write` 工具——消除大 context 下 output token 耗尽时的静默空 `{}` 失败 |
+| Reporter 降级模式评级 | 新增路径 B：当 Challenger 使用 A/B-分批/C/D 策略（未覆盖全部 P0/P1）时，Reporter 输出 ⚪"不可观测"等级，而非误导性评分 |
+| 工具调用预算规则 | Challenger：总调用 ≤ 30 次；每条发现最多 2 次；超出即判 UNVERIFIABLE，不再追加调查 |
 
 ### v1.6.0（2026-04-14）
 

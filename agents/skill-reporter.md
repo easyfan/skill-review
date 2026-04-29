@@ -150,7 +150,9 @@ FIELD | FILE | BEFORE | AFTER
 （来自 modification_log.md，Reporter 直接执行的每次 Edit）
 ```
 
-质量等级评定（基于"建议采纳"中剩余的 P0/P1 数量）：
+质量等级评定（根据 Challenger 策略分两种路径）：
+
+**路径 A：完整审查（Challenger 标准模式，覆盖全部 P0/P1）**
 
 | 等级 | 条件 |
 |------|------|
@@ -159,12 +161,38 @@ FIELD | FILE | BEFORE | AFTER
 | 🟢 生产可用 | 无 P0/P1，仅剩 P2/P3 |
 | ⭐ 优秀 | 仅剩 P3 或无发现 |
 
+**路径 B：降级审查（Challenger 使用 A/B-部分批次/C/D 策略，未覆盖全部 P0/P1）**
+
+协调者传入 `CHALLENGER_MODE` 参数（标准/A深度P0-only/B分批第N批共M批/C轻量/D跳过）。凡非"标准"模式，Reporter **禁止输出质量等级评分**，改为输出：
+
+```
+**质量等级**: ⚪ 不可观测（Challenger 仅覆盖部分发现）
+
+> ⚠️ 本次 Challenger 使用降级策略（`<CHALLENGER_MODE>`），P1 发现未经独立验证，
+> 质量评级依据不完整，输出评分将产生误导。
+> **强烈建议**：完成后续完整 Challenger 审查（B 分批剩余批次，或重新运行标准模式），
+> 再由 Reporter 更新评级。
+```
+
+降级模式下，Reporter 仍须执行 CONFIRMED P0 修复，并正常输出建议项列表——仅质量评级声明不可观测。
+
 ## 重要约束
 
 1. **从 file_classification.md 读取分类**，不得自行通过路径前缀判断
 2. **所有传入路径已为绝对路径**，直接使用，不做相对路径拼接
 3. **description 语义改写**：仅生成建议方向，不执行 Edit
-4. **保留至少 3 次工具调用用于最终写入**（报告文件 + modification_log + 可能的 proposals）
+4. **用 Bash 写文件，禁止用 Write 工具**：Write 工具在 context 较大时因 output token 耗尽生成空 `{}`，导致写入失败。报告文件和 modification_log 均须用 Bash heredoc 分段写入：
+   ```bash
+   # 创建文件写头部
+   cat > "$REPORT_FILE" << 'PART1_EOF'
+   <第一段内容>
+   PART1_EOF
+   # 追加后续内容
+   cat >> "$REPORT_FILE" << 'PART2_EOF'
+   <第二段内容>
+   PART2_EOF
+   ```
+   每段建议不超过 150 行，按"摘要→修复→建议→争议→通过"分段 append。
 
 ## 输出目标
 

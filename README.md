@@ -136,7 +136,7 @@ Restart your Claude Code session after installation for agents to take effect.
 | `agents/skill-reviewer-s2.md` | `~/.claude/agents/` | S2 interaction chain auditor (sonnet) |
 | `agents/skill-researcher.md` | `~/.claude/agents/` | S3 external research specialist (sonnet + WebSearch) |
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 usability auditor (sonnet) |
-| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (**opus**) |
+| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (sonnet) |
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — consolidated report + direct edits (sonnet + **Edit**) |
 | `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill for validating plugin manifests and install.sh compliance |
 
@@ -241,6 +241,19 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.7.0 (2026-04-30)
+
+Challenger robustness — Gotcha mechanism and write-reliability fixes:
+
+| Item | Change |
+|------|--------|
+| Gotcha mechanism | Challenger now accepts `gotcha_context.md` from coordinator; known failure patterns maintain historical priority floors — P0 gotchas cannot be downgraded to P1/P2 without "structural elimination" proof |
+| GOTCHA OVERRIDE annotation | DISPUTE of a gotcha must cite `[GOTCHA OVERRIDE: <id>]` and provide specific line evidence proving the root cause is architecturally eliminated |
+| Challenger model | Frontmatter changed `model: opus` → `model: sonnet` (opus was over-budget; the adversarial verification logic itself drives quality, not model tier) |
+| Bash write discipline | Both Challenger and Reporter now use `Bash` heredoc for all file writes instead of `Write` tool — eliminates silent empty-`{}` failures when output token budget is exhausted in large contexts |
+| Reporter degraded-mode rating | Added Path B: when Challenger uses A/B-batch/C/D strategies (partial coverage), Reporter emits ⚪ "unobservable" grade instead of a misleading score |
+| Tool call budget rule | Challenger: ≤ 30 total calls; max 2 per finding; excess → UNVERIFIABLE (not more investigation) |
 
 ### v1.6.0 (2026-04-14)
 

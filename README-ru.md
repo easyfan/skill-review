@@ -13,7 +13,7 @@ Skills/Agents Design Committee — систематическая многоме
 - S4 Удобство использования: UX, формат вывода, обработка ошибок, обратная связь о прогрессе
 
 **Stage 2 (последовательно)**:
-- Challenger (opus): выносит вердикты CONFIRM / DISPUTE / UNVERIFIABLE по находкам P0/P1
+- Challenger (sonnet): выносит вердикты CONFIRM / DISPUTE / UNVERIFIABLE по находкам P0/P1
 - Reporter: сводный отчёт + прямые исправления подтверждённых проблем
 
 **Stage 3 (условно)**:
@@ -103,7 +103,7 @@ cp agents/*.md ~/.claude/agents/
 | `agents/skill-reviewer-s2.md` | `~/.claude/agents/` | S2 аудитор цепочки взаимодействий (sonnet) |
 | `agents/skill-researcher.md` | `~/.claude/agents/` | S3 специалист внешних исследований (sonnet + WebSearch) |
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 аудитор удобства использования (sonnet) |
-| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (**opus**) |
+| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (sonnet) |
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — сводный отчёт + прямые правки (sonnet + **Edit**) |
 | `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill для валидации манифестов плагинов и проверки соответствия install.sh |
 
@@ -120,7 +120,7 @@ cp agents/*.md ~/.claude/agents/
 ## Стоимость
 
 - Stage 1: 4 агента sonnet параллельно — примерно $0,1–0,5 USD
-- Stage 2 Challenger: **модель opus** — примерно $0,5–2 USD (~5× стоимости sonnet)
+- Stage 2 Challenger: модель sonnet — примерно $0,1–0,5 USD
 - Для дешёвой быстрой проверки: ввести "stop" после Stage 1, чтобы пропустить Challenger
 - Предупреждение о стоимости показывается при числе целевых файлов > 15
 
@@ -158,6 +158,17 @@ bash install.sh --target /tmp/test-claude
 ```
 
 ## Changelog
+
+### v1.7.0 (2026-04-30)
+
+Полные примечания к выпуску на английском см. в [README.md](README.md).
+
+| Элемент | Изменение |
+|---------|----------|
+| Механизм Gotcha | Challenger принимает `gotcha_context.md`; известные паттерны сбоев сохраняют исторические минимумы приоритета |
+| Модель Challenger | `model: opus` → `model: sonnet` |
+| Дисциплина записи Bash | Challenger и Reporter используют `Bash` heredoc вместо инструмента `Write` |
+| Деградированный режим Reporter | Новый путь B: ⚪ «ненаблюдаемый» при частичном покрытии Challenger |
 
 ### v1.6.0 (2026-04-14)
 

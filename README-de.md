@@ -13,7 +13,7 @@ Skills/Agents Design Committee — systematische, mehrdimensionale Qualitätspr�
 - S4 Usability: UX, Ausgabeformat, Fehlerbehandlung, Fortschrittsrückmeldung
 
 **Stage 2 (seriell)**:
-- Challenger (opus): erteilt CONFIRM / DISPUTE / UNVERIFIABLE-Urteile zu P0/P1-Befunden
+- Challenger (sonnet): erteilt CONFIRM / DISPUTE / UNVERIFIABLE-Urteile zu P0/P1-Befunden
 - Reporter: konsolidierter Bericht + direkte Korrekturen bei bestätigten Problemen
 
 **Stage 3 (bedingt)**:
@@ -103,7 +103,7 @@ Claude Code-Sitzung nach der Installation neu starten, damit Agents aktiv werden
 | `agents/skill-reviewer-s2.md` | `~/.claude/agents/` | S2 Interaktionsketten-Prüfer (sonnet) |
 | `agents/skill-researcher.md` | `~/.claude/agents/` | S3 Externe Recherche-Spezialist (sonnet + WebSearch) |
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 Usability-Prüfer (sonnet) |
-| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (**opus**) |
+| `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (sonnet) |
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — Bericht + direkte Korrekturen (sonnet + **Edit**) |
 | `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill zur Validierung von Plugin-Manifests und install.sh-Konformität |
 
@@ -120,7 +120,7 @@ Die `user-level-write`-Erkennung geht von `PROJECT_ROOT` aufwärts bis `CLAUDE_C
 ## Kosten
 
 - Stage 1: 4 sonnet Agents parallel — ca. $0,1–0,5 USD
-- Stage 2 Challenger: **opus-Modell** — ca. $0,5–2 USD (~5× sonnet-Kosten)
+- Stage 2 Challenger: sonnet-Modell — ca. $0,1–0,5 USD
 - Für günstige Schnellprüfung: nach Stage 1 "stop" eingeben, um Challenger zu überspringen
 - Kostenwarnung wird angezeigt, wenn die Anzahl der Zieldateien 15 überschreitet
 
@@ -187,6 +187,17 @@ bash install.sh --target /tmp/test-claude
 | 15 | Stage-3-Auto-Trigger | `modification_log.md` enthält Description-Änderung → Assertion-Design ausgelöst |
 
 ## Changelog
+
+### v1.7.0 (2026-04-30)
+
+See [README.md](README.md) for full English release notes.
+
+| Item | Änderung |
+|------|----------|
+| Gotcha-Mechanismus | Challenger akzeptiert `gotcha_context.md`; bekannte Fehlermuster behalten historische Prioritätsgrenzen |
+| Challenger-Modell | `model: opus` → `model: sonnet` |
+| Bash-Schreibdisziplin | Challenger und Reporter verwenden `Bash`-Heredoc statt `Write`-Tool |
+| Reporter Downgrade-Modus | Neuer Pfad B: ⚪ „nicht beobachtbar" bei partieller Challenger-Abdeckung |
 
 ### v1.6.0 (2026-04-14)
 
