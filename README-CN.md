@@ -220,6 +220,19 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.7.1（2026-05-07）
+
+多批次隔离与协调者 context 修复（自指委员会审查 P0×3 + P1×4）：
+
+| 项目 | 变更 |
+|------|------|
+| 批次隔离 | Step 0b 每次运行清零旧批次 findings，防止 Challenger 处理过期内容 |
+| pipeline_status.md 初始化 | 覆盖写入初始化 + sed replace 更新，消除多路径追加歧义 |
+| Agent 返回值约束 | Agent 返回 ≤300 token 摘要，完整 findings 写文件，协调者通过 Read 读取 |
+| Stage 1 执行约束速查 | Stage 1 前新增速查 callout，3 条关键规则前置可见 |
+
+详见 [README.md](README.md) 完整英文说明。
+
 ### v1.7.0（2026-04-30）
 
 Challenger 健壮性——Gotcha 机制与写入可靠性修复：

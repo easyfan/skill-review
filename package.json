@@ -1,6 +1,6 @@
 {
   "name": "skill-review",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Skills/Agents Design Committee — systematic multi-dimensional quality review for Claude Code skill, agent, and command files",
   "keywords": [
     "claude-code",

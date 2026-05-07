@@ -188,6 +188,17 @@ bash install.sh --target /tmp/test-claude
 
 ## Changelog
 
+### v1.7.1 (2026-05-07)
+
+| Item | Änderung |
+|------|----------|
+| Batch-Isolation | Step 0b löscht alte Findings vor jedem Lauf |
+| pipeline_status.md Init | Überschreiben + sed-Replace statt Anhängen |
+| Agent-Rückgabevertrag | ≤300-Token-Zusammenfassung; vollständige Findings in Datei |
+| Stage-1-Kurzreferenz | Kritische Regeln als Callout vor Stage 1 vorgezogen |
+
+See [README.md](README.md) for full English release notes.
+
 ### v1.7.0 (2026-04-30)
 
 See [README.md](README.md) for full English release notes.

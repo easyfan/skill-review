@@ -242,6 +242,19 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.7.1 (2026-05-07)
+
+Multi-batch isolation and coordinator context fixes — from self-referential committee audit (P0×3 + P1×4 confirmed):
+
+| Item | Change |
+|------|--------|
+| Batch isolation | Step 0b now clears `sN_findings.md` and `challenger_response.md` at run start — prevents Challenger from processing stale findings accumulated from prior batches |
+| `pipeline_status.md` init | Step 0b writes `STATUS: PENDING` with `>` (overwrite); all STATUS updates use `sed -i` replace instead of `>>` append — eliminates ambiguous multi-line STATUS on multi-path runs |
+| Agent return contract | Agent prompts now require ≤300-token summary return; full findings written to file; coordinator reads via `Read` tool — prevents coordinator context exhaustion in 5+ batch `all` mode |
+| Stage 1 speed-ref | Added `⚡ Stage 1 execution constraints` callout block before Stage 1 section — surfaces 3 critical near-end rules that were being missed due to context saturation |
+| Batch identity in output | Stage 1 launch banner now includes `batch N/TOTAL — targets: <file_names>` for visibility in multi-batch runs |
+| S2 wiki fallback | S2 workload table prompt now includes inline default column spec when referenced wiki page is absent |
+
 ### v1.7.0 (2026-04-30)
 
 Challenger robustness — Gotcha mechanism and write-reliability fixes:

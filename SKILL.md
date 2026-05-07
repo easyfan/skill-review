@@ -74,6 +74,27 @@ Coordinator can pass a `gotcha_context.md` to Challenger, containing known failu
 
 This prevents recurrence of previously-confirmed failure modes being silently cleared in future reviews.
 
+## Batch isolation (v1.7.1+)
+
+In `all` / `all-skills` / multi-file modes, the coordinator runs multiple Stage 1 → Stage 2 cycles. Without isolation, `sN_findings.md` and `challenger_response.md` accumulate across batches, causing Challenger to process stale findings from earlier batches.
+
+Fix: Step 0b now clears these files at the start of every run:
+```bash
+rm -f "$SCRATCH_DIR"/{s1,s2,s3,s4}_findings.md "$SCRATCH_DIR/challenger_response.md"
+```
+
+## pipeline_status.md initialization (v1.7.1+)
+
+`pipeline_status.md` is written by three different code paths (ZERO_FINDINGS, PARTIAL_FINDINGS, NORMAL). Without explicit initialization, concurrent `>>` appends produce a multi-line file; `grep` or `tail` reads then return ambiguous results.
+
+Fix: Step 0b now writes an explicit `STATUS: PENDING` line with `>` (overwrite), and all subsequent STATUS updates use `sed -i "s/^STATUS:.*/"` (in-place replace) rather than `>>` (append).
+
+## Agent return value contract (v1.7.1+)
+
+In multi-batch mode, each batch's 4 Agent calls return their full output text into the coordinator context. Over 5+ batches this causes context exhaustion and causes the coordinator to miss near-end execution rules.
+
+Fix: Agent prompts now require a ≤300-token summary return (finding counts + P0/P1 title list). Full findings are written to `sN_findings.md`; coordinator reads them via the `Read` tool rather than relying on the return text as a data source.
+
 ## File write discipline (v1.7+)
 
 Both Challenger and Reporter use `Bash` heredoc writes instead of the `Write` tool. Reason: `Write` tool may produce an empty `{}` when output token budget is exhausted in large contexts, resulting in silent data loss. The heredoc pattern (`cat > file << 'EOF' ... EOF`) is immune to this failure mode.
