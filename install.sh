@@ -11,14 +11,14 @@ set -euo pipefail
 #   CLAUDE_DIR=<claude_home> bash install.sh      # packer convention (lower priority than --target)
 #
 # Installs:
-#   commands/skill-review.md              → <claude_home>/commands/skill-review.md
+#   commands/skill-review.md              → <claude_home>/commands/skill-review.md  (thin wrapper)
 #   agents/skill-reviewer-s1.md           → <claude_home>/agents/skill-reviewer-s1.md
 #   agents/skill-reviewer-s2.md           → <claude_home>/agents/skill-reviewer-s2.md
 #   agents/skill-researcher.md            → <claude_home>/agents/skill-researcher.md
 #   agents/skill-reviewer-s4.md           → <claude_home>/agents/skill-reviewer-s4.md
 #   agents/skill-challenger.md            → <claude_home>/agents/skill-challenger.md
 #   agents/skill-reporter.md              → <claude_home>/agents/skill-reporter.md
-#   skills/skill-review/SKILL.md          → <claude_home>/skills/skill-review/SKILL.md
+#   skills/skill-review/SKILL.md          → <claude_home>/skills/skill-review/SKILL.md  (canonical logic)
 #   skills/skill-review/DESIGN.md         → <claude_home>/skills/skill-review/DESIGN.md
 #   skills/skill-review/scripts/*.sh      → <claude_home>/skills/skill-review/scripts/
 #   skills/skill-review/agents/phase-*.md → <claude_home>/skills/skill-review/agents/
@@ -137,15 +137,16 @@ for agent in skill-reviewer-s1 skill-reviewer-s2 skill-researcher skill-reviewer
   fi
 done
 
-# Skill: skill-review (coordinator support files — scripts/, agents/phase-*, DESIGN.md, SKILL.md)
+# Skill: skill-review (canonical coordinator + support files)
+# commands/skill-review.md is a thin wrapper; full logic lives in skills/skill-review/SKILL.md
 sr_src="$SCRIPT_DIR"
 sr_dst="$TARGET/skills/skill-review"
 run mkdir -p "$sr_dst/scripts" "$sr_dst/agents"
-# SKILL.md (same content as commands/skill-review.md)
-if [ -f "$sr_dst/SKILL.md" ] && diff -q "$sr_src/commands/skill-review.md" "$sr_dst/SKILL.md" &>/dev/null; then
+# SKILL.md (canonical full implementation — source of truth)
+if [ -f "$sr_dst/SKILL.md" ] && diff -q "$sr_src/skills/skill-review/SKILL.md" "$sr_dst/SKILL.md" &>/dev/null; then
   skip "skills/skill-review/SKILL.md"
 else
-  run cp "$sr_src/commands/skill-review.md" "$sr_dst/SKILL.md"
+  run cp "$sr_src/skills/skill-review/SKILL.md" "$sr_dst/SKILL.md"
   ok "skills/skill-review/SKILL.md → $sr_dst/SKILL.md"
   changed=$((changed + 1))
 fi
