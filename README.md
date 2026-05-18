@@ -248,7 +248,7 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ### v1.8.0 (2026-05-18)
 
-Stage 2 agent化 + coordinator shrink — primary coordinator reduced from 396 → 286 lines:
+Stage 2 agentification + coordinator shrink — primary coordinator reduced from 396 → 286 lines:
 
 | Item | Change |
 |------|--------|
@@ -296,7 +296,7 @@ Quality and robustness improvements — all findings from the self-referential c
 | Challenger failure branch | Step 2b: explicit condition for `CHALLENGER_FAILED` status — skips `challenger_response.md` preread, inlines status string, removes the file from Reporter params |
 | Placeholder write subject | Placeholder write on missing `sN_findings.md` changed from passive to active: coordinator checks after all 4 Agents return and writes via Write tool |
 | Mid-point summary template | Structured markdown template added: auditor status row, P0/P1/P2/P3 layered list, confirmation prompt. Marked as "required interactive node — no unattended mode" |
-| description | Extended to intent-based phrasing covering "review 一下", "检查", "帮我看看" etc.; cost note updated to "$0.5-2+ USD depending on target count" |
+| description | Extended to intent-based phrasing covering Chinese natural-language review requests; cost note updated to "$0.5-2+ USD depending on target count" |
 | Dead code removed | `TOTAL_LINES` variable in Step 0c-1 removed; threshold constants annotated with rationale |
 | grep fallback | Step 2b grep: `-B1` → `-B3`; empty-match fallback to full first-200-line read added |
 | A/B/C/D strategies | Step 2a-pre overload strategies now inline-defined (A: slim P0/P1 only, B: batch 5 files, C: skip Challenger, D: terminate) |

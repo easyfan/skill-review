@@ -11,14 +11,18 @@ set -euo pipefail
 #   CLAUDE_DIR=<claude_home> bash install.sh      # packer convention (lower priority than --target)
 #
 # Installs:
-#   commands/skill-review.md         → <claude_home>/commands/skill-review.md
-#   agents/skill-reviewer-s1.md      → <claude_home>/agents/skill-reviewer-s1.md
-#   agents/skill-reviewer-s2.md      → <claude_home>/agents/skill-reviewer-s2.md
-#   agents/skill-researcher.md       → <claude_home>/agents/skill-researcher.md
-#   agents/skill-reviewer-s4.md      → <claude_home>/agents/skill-reviewer-s4.md
-#   agents/skill-challenger.md       → <claude_home>/agents/skill-challenger.md
-#   agents/skill-reporter.md         → <claude_home>/agents/skill-reporter.md
-#   skills/validate-plugin-manifest/ → <claude_home>/skills/validate-plugin-manifest/
+#   commands/skill-review.md              → <claude_home>/commands/skill-review.md
+#   agents/skill-reviewer-s1.md           → <claude_home>/agents/skill-reviewer-s1.md
+#   agents/skill-reviewer-s2.md           → <claude_home>/agents/skill-reviewer-s2.md
+#   agents/skill-researcher.md            → <claude_home>/agents/skill-researcher.md
+#   agents/skill-reviewer-s4.md           → <claude_home>/agents/skill-reviewer-s4.md
+#   agents/skill-challenger.md            → <claude_home>/agents/skill-challenger.md
+#   agents/skill-reporter.md              → <claude_home>/agents/skill-reporter.md
+#   skills/skill-review/SKILL.md          → <claude_home>/skills/skill-review/SKILL.md
+#   skills/skill-review/DESIGN.md         → <claude_home>/skills/skill-review/DESIGN.md
+#   skills/skill-review/scripts/*.sh      → <claude_home>/skills/skill-review/scripts/
+#   skills/skill-review/agents/phase-*.md → <claude_home>/skills/skill-review/agents/
+#   skills/validate-plugin-manifest/      → <claude_home>/skills/validate-plugin-manifest/
 
 TARGET="${CLAUDE_DIR:-${HOME}/.claude}"
 DRY_RUN=false
@@ -61,6 +65,15 @@ echo ""
 # ── Uninstall ──────────────────────────────────────────────────────────────
 if $UNINSTALL; then
   echo "  Uninstalling..."
+
+  # Remove skills/skill-review/ directory
+  sr_dst_uninstall="$TARGET/skills/skill-review"
+  if [ -d "$sr_dst_uninstall" ]; then
+    run rm -rf "$sr_dst_uninstall"
+    ok "Removed $sr_dst_uninstall"
+  else
+    skip "skills/skill-review (not found)"
+  fi
 
   for f in \
     "commands/skill-review.md" \
@@ -120,6 +133,50 @@ for agent in skill-reviewer-s1 skill-reviewer-s2 skill-researcher skill-reviewer
     [ -f "$dst" ] && info "Updating  agents/${agent}.md..." || info "Installing agents/${agent}.md..."
     run cp "$src" "$dst"
     ok "agents/${agent}.md → $dst"
+    changed=$((changed + 1))
+  fi
+done
+
+# Skill: skill-review (coordinator support files — scripts/, agents/phase-*, DESIGN.md, SKILL.md)
+sr_src="$SCRIPT_DIR"
+sr_dst="$TARGET/skills/skill-review"
+run mkdir -p "$sr_dst/scripts" "$sr_dst/agents"
+# SKILL.md (same content as commands/skill-review.md)
+if [ -f "$sr_dst/SKILL.md" ] && diff -q "$sr_src/commands/skill-review.md" "$sr_dst/SKILL.md" &>/dev/null; then
+  skip "skills/skill-review/SKILL.md"
+else
+  run cp "$sr_src/commands/skill-review.md" "$sr_dst/SKILL.md"
+  ok "skills/skill-review/SKILL.md → $sr_dst/SKILL.md"
+  changed=$((changed + 1))
+fi
+# DESIGN.md
+if [ -f "$sr_dst/DESIGN.md" ] && diff -q "$sr_src/DESIGN.md" "$sr_dst/DESIGN.md" &>/dev/null; then
+  skip "skills/skill-review/DESIGN.md"
+else
+  run cp "$sr_src/DESIGN.md" "$sr_dst/DESIGN.md"
+  ok "skills/skill-review/DESIGN.md → $sr_dst/DESIGN.md"
+  changed=$((changed + 1))
+fi
+# scripts/
+for script in "$sr_src/scripts/"*.sh; do
+  fname="$(basename "$script")"
+  if [ -f "$sr_dst/scripts/$fname" ] && diff -q "$script" "$sr_dst/scripts/$fname" &>/dev/null; then
+    skip "skills/skill-review/scripts/$fname"
+  else
+    run cp "$script" "$sr_dst/scripts/$fname"
+    ok "skills/skill-review/scripts/$fname → $sr_dst/scripts/$fname"
+    changed=$((changed + 1))
+  fi
+done
+# agents/phase-*.md (orchestration agents, NOT the committee member agents)
+for phase_agent in "$sr_src/agents/phase-"*.md; do
+  [ -f "$phase_agent" ] || continue
+  fname="$(basename "$phase_agent")"
+  if [ -f "$sr_dst/agents/$fname" ] && diff -q "$phase_agent" "$sr_dst/agents/$fname" &>/dev/null; then
+    skip "skills/skill-review/agents/$fname"
+  else
+    run cp "$phase_agent" "$sr_dst/agents/$fname"
+    ok "skills/skill-review/agents/$fname → $sr_dst/agents/$fname"
     changed=$((changed + 1))
   fi
 done
