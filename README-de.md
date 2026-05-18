@@ -75,6 +75,9 @@ Claude Code-Sitzung nach der Installation neu starten, damit Agents aktiv werden
 # Alle Commands, Agents und Skills prüfen
 /skill-review all
 
+# Nur Commands prüfen
+/skill-review all-commands
+
 # Nur Agents prüfen
 /skill-review all-agents
 

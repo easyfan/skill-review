@@ -1,5 +1,6 @@
 {
   "skill_name": "skill-review",
+  "looper_t5_note": "skill-review 是 orchestrator 类 skill，T5 eval 在 looper clean Docker 环境下结构性不适用。原因：skill-review 的每个 eval case 均需要 Stage 1 并行 Agent 协调（S1/S2/S4/Researcher/Challenger/Reporter），而 looper 使用 `claude -p` 单次无状态执行模型，容器内无法完成多 Agent 嵌套调用链。install.sh 正确安装了所有 committee agents（T2 PASS），trigger 行为正确（T3 PASS），核心部署功能已验证。T5 在本 skill 上应标记为 ⏭️ skip（结构性不适用），不计入 FAIL。",
   "evals": [
     {
       "id": 1,
@@ -105,7 +106,7 @@
       "files": [
         {
           "path": ".claude/agent_scratch/skill_review_committee/lock.pid",
-          "content": "1"
+          "content": "$$CURRENT_PID$$ $$RECENT_TS$$"
         }
       ],
       "assertions": [
@@ -115,7 +116,7 @@
         "输出含 PID 信息",
         "未启动任何 Task tool"
       ],
-      "note": "文件中 PID=1 在 Linux 容器中为 init 进程，始终存活，可稳定触发并发保护逻辑"
+      "note": "lock.pid 格式须为 '<PID> <epoch_timestamp>'，两者缺一时走孤儿清理路径而非并发错误路径。测试时应使用当前会话真实 PID（via $$）和近期时间戳（距今 < 1800s）；macOS 下 PID 1 不可用（kill -0 1 因权限返回非零），须使用普通用户进程 PID。建议在 Linux 容器环境中执行此 eval。"
     },
     {
       "id": 10,

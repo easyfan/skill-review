@@ -75,6 +75,9 @@ cp agents/*.md ~/.claude/agents/
 # Проверить все commands, agents и skills
 /skill-review all
 
+# Проверить только commands
+/skill-review all-commands
+
 # Проверить только agents
 /skill-review all-agents
 

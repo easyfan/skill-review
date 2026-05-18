@@ -90,6 +90,9 @@ cp agents/*.md ~/.claude/agents/
 # 审查所有 commands、agents 和 skills
 /skill-review all
 
+# 仅审查 commands
+/skill-review all-commands
+
 # 仅审查 agents
 /skill-review all-agents
 

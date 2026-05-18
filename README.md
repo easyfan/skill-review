@@ -108,6 +108,9 @@ Restart your Claude Code session after installation for agents to take effect.
 # Review all commands, agents, and skills
 /skill-review all
 
+# Review commands only
+/skill-review all-commands
+
 # Review agents only
 /skill-review all-agents
 

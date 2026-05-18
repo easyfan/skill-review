@@ -75,6 +75,9 @@ Redémarrer la session Claude Code après l'installation pour que les agents pre
 # Réviser tous les commands, agents et skills
 /skill-review all
 
+# Réviser uniquement les commands
+/skill-review all-commands
+
 # Réviser uniquement les agents
 /skill-review all-agents
 

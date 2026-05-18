@@ -13,6 +13,8 @@ allowed-tools: ["Bash", "Read", "Write", "Agent"]
 /skill-review skill-a               # 单个 skill（使用 skill name，非文件名）
 /skill-review skill-a,skill-b       # 多个（逗号分隔，可含空格，自动修正）
 /skill-review all-skills            # 全部 skills 目录下的文件
+/skill-review all-commands          # 全部 commands 目录下的文件
+/skill-review all-agents            # 全部 agents 目录下的文件
 /skill-review all                   # commands + agents + skills 全量审查
 ```
 
