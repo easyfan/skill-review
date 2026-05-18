@@ -220,6 +220,22 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.8.0（2026-05-18）
+
+Stage 2 Agent 化 + 协调者压缩（396 → 286 行）：
+
+| 变更项 | 说明 |
+|--------|------|
+| `agents/phase-2a-challenger.md` | 新增：Stage 2a orchestration agent（工作量度量 + Challenger 调度） |
+| `agents/phase-2b-reporter.md` | 新增：Stage 2b orchestration agent（传参组装 + Reporter 调度 + Gotcha 写入） |
+| `scripts/check_size.sh` | 新增：替代 Step 0c-1 内联循环，超 400 行强制退出并提示 `/skill-shrink` |
+| `scripts/read_frontmatter.sh` | 新增：替代 Step 0f 内联 `awk` 循环 |
+| `scripts/write_self_ref.sh` | 新增：替代 Step 2b 自指模式 bash 块 |
+| `DESIGN.md` | 新增入 packer：D 类设计说明（Stage 1 约束、Agent 表、STATUS 枚举、策略选项） |
+| 协调者 | Stage 1 速查 + Agent 表 + 整个 Stage 2（~85 行）替换为 agent dispatch 调用 |
+
+See [README.md](README.md) for full English release notes.
+
 ### v1.7.1（2026-05-07）
 
 多批次隔离与协调者 context 修复（自指委员会审查 P0×3 + P1×4）：

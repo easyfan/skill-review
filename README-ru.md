@@ -159,6 +159,20 @@ bash install.sh --target /tmp/test-claude
 
 ## Changelog
 
+### v1.8.0 (2026-05-18)
+
+Агентизация Stage 2 + сжатие координатора (396 → 286 строк):
+
+| Элемент | Изменение |
+|---------|-----------|
+| `agents/phase-2a-challenger.md` | Новый: агент оркестрации Stage 2a |
+| `agents/phase-2b-reporter.md` | Новый: агент оркестрации Stage 2b |
+| `scripts/check_size.sh` / `read_frontmatter.sh` / `write_self_ref.sh` | Новые вспомогательные скрипты |
+| `DESIGN.md` | Новый: документация по архитектуре (класс D) |
+| Координатор | Ссылка Stage 1 + таблица агентов + весь Stage 2 заменены диспетчерскими вызовами |
+
+See [README.md](README.md) for full English release notes.
+
 ### v1.7.1 (2026-05-07)
 
 | Элемент | Изменение |

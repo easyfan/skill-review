@@ -159,6 +159,20 @@ bash install.sh --target /tmp/test-claude
 
 ## Changelog
 
+### v1.8.0 (2026-05-18)
+
+Agentification Stage 2 + compression du coordinateur (396 → 286 lignes) :
+
+| Élément | Changement |
+|---------|------------|
+| `agents/phase-2a-challenger.md` | Nouveau : agent d'orchestration Stage 2a |
+| `agents/phase-2b-reporter.md` | Nouveau : agent d'orchestration Stage 2b |
+| `scripts/check_size.sh` / `read_frontmatter.sh` / `write_self_ref.sh` | Nouveaux : 3 scripts auxiliaires |
+| `DESIGN.md` | Nouveau : documentation de conception (classe D) |
+| Coordinateur | Référence rapide Stage 1 + tableau Agent + Stage 2 entier remplacés par des appels dispatch |
+
+See [README.md](README.md) for full English release notes.
+
 ### v1.7.1 (2026-05-07)
 
 | Élément | Modification |

@@ -138,6 +138,10 @@ Restart your Claude Code session after installation for agents to take effect.
 | `agents/skill-reviewer-s4.md` | `~/.claude/agents/` | S4 usability auditor (sonnet) |
 | `agents/skill-challenger.md` | `~/.claude/agents/` | Challenger (sonnet) |
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — consolidated report + direct edits (sonnet + **Edit**) |
+| `agents/phase-2a-challenger.md` | `~/.claude/skills/skill-review/agents/` | Stage 2a orchestration agent (workload measurement + Challenger dispatch) |
+| `agents/phase-2b-reporter.md` | `~/.claude/skills/skill-review/agents/` | Stage 2b orchestration agent (param assembly + Reporter dispatch + Gotcha write) |
+| `scripts/*.sh` | `~/.claude/skills/skill-review/scripts/` | 10 bash helper scripts (size check, frontmatter read, self-ref write, etc.) |
+| `DESIGN.md` | `~/.claude/skills/skill-review/` | Design rationale and reference tables (not loaded into execution context) |
 | `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill for validating plugin manifests and install.sh compliance |
 
 ## Permission model
@@ -241,6 +245,20 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.8.0 (2026-05-18)
+
+Stage 2 agent化 + coordinator shrink — primary coordinator reduced from 396 → 286 lines:
+
+| Item | Change |
+|------|--------|
+| `agents/phase-2a-challenger.md` | New: Stage 2a logic (workload measurement → Challenger launch → timeout/failure routing → `challenger_preview.md` generation) extracted from coordinator |
+| `agents/phase-2b-reporter.md` | New: Stage 2b logic (self-ref write → param assembly → Reporter launch → Gotcha write protocol) extracted from coordinator |
+| `scripts/check_size.sh` | New: replaces Step 0c-1 inline loop; hard-exits on >400-line files with `/skill-shrink` instructions |
+| `scripts/read_frontmatter.sh` | New: replaces Step 0f inline `awk` loop for YAML front-matter extraction |
+| `scripts/write_self_ref.sh` | New: replaces Step 2b self-ref bash block; writes `SELF_REF: true` to `pipeline_status.md` |
+| `DESIGN.md` | New in packer: 4 D-class sections added (Stage 1 constraints, Agent table, STATUS enum, Challenger strategy options) |
+| Coordinator | Stage 1 speed checklist + Agent table + entire Stage 2 (~85 lines) replaced with agent dispatch calls |
 
 ### v1.7.1 (2026-05-07)
 
