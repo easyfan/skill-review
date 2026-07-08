@@ -223,6 +223,17 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.9.0（2026-07-08）
+
+| 项目 | 变更 |
+|------|------|
+| `discover_targets.sh` | 新增：基于 frontmatter name 索引的目标发现，支持命名空间（`po:release`、`dev-workflow`） |
+| 白名单正则 | 目标格式支持冒号，结构性拒绝 `.` 与 `/` |
+| `load_gotchas.sh` | skill 名推断优先 frontmatter name 字段（冒号转连字符） |
+| `init_scratch.sh` | 并发锁改为纯时间戳语义，修复 `kill -0` 检测恒失效的问题 |
+
+完整英文 release notes 见 [README.md](README.md)。
+
 ### v1.8.0（2026-05-18）
 
 Stage 2 Agent 化 + 协调者压缩（396 → 286 行）：

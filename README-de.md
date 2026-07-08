@@ -191,6 +191,16 @@ bash install.sh --target /tmp/test-claude
 
 ## Changelog
 
+### v1.9.0 (2026-07-08)
+
+| Punkt | Änderung |
+|-------|----------|
+| `discover_targets.sh` | Neu: Zielauflösung über Frontmatter-`name`-Index mit Namespace-Unterstützung (`po:release`) |
+| `load_gotchas.sh` | Skill-Namensableitung bevorzugt jetzt das Frontmatter-`name`-Feld |
+| `init_scratch.sh` | Parallelitätssperre auf reine Zeitstempel-Semantik umgestellt |
+
+Siehe [README.md](README.md) für die vollständigen englischen Release Notes.
+
 ### v1.8.0 (2026-05-18)
 
 Stage-2-Agentisierung + Koordinator-Komprimierung (396 → 286 Zeilen):

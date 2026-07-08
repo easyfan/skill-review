@@ -10,10 +10,12 @@ allowed-tools: ["Bash", "Read", "Write", "Agent"]
 
 示例：
 ```
-/skill-review skill-a               # 单个 skill（使用 skill name，非文件名）
+/skill-review skill-a               # 单个 skill（标识符 = name 字段值或顶层文件名）
 /skill-review skill-a,skill-b       # 多个（逗号分隔，可含空格，自动修正）
+/skill-review po:release            # 命名空间 skill（冒号 name，文件在 commands/po/release.md）
+/skill-review dev-workflow          # 命名空间目录（解析到 commands/dev-workflow/SKILL.md）
 /skill-review all-skills            # 全部 skills 目录下的文件
-/skill-review all-commands          # 全部 commands 目录下的文件
+/skill-review all-commands          # 全部 commands 目录下的文件（递归，含命名空间子 skill）
 /skill-review all-agents            # 全部 agents 目录下的文件
 /skill-review all                   # commands + agents + skills 全量审查
 ```
@@ -32,20 +34,24 @@ REPORT_DIR="$PROJECT_ROOT/.claude/reports"
 **Step 0a：参数解析与目标发现**
 
 - 空值检查（Step 0a-1）：`$ARGUMENTS` 为空时输出用法并退出
-- 安全过滤（Step 0a-2）：白名单正则 `^(all|all-commands|all-agents|all-skills|[a-z][a-z0-9_-]+(,[a-z][a-z0-9_-]+)*)$`，不合法则输出 `无效目标格式：'<输入值>'。合法格式：小写字母/数字/连字符，如 skill-review 或 skill-a,skill-b。附加说明请通过对话传入，不应附在参数中。` 后退出
+- 安全过滤（Step 0a-2）：白名单正则 `^(all|all-commands|all-agents|all-skills|[a-z][a-z0-9_:-]+(,[a-z][a-z0-9_:-]+)*)$`（字符类含冒号以支持命名空间 skill；不含 `.` 与 `/`，结构性拒绝 `..` 和绝对路径），不合法则输出 `无效目标格式：'<输入值>'。合法格式：小写字母/数字/连字符/冒号，如 skill-review、po:release 或 skill-a,skill-b。命名空间用冒号，如 po:release。附加说明请通过对话传入，不应附在参数中。` 后退出
 - 格式修正（Step 0a-3）：逗号+空格自动修正，无需确认
 
-动态发现 skill 文件，构建"名称 → 绝对路径"映射表：
+动态发现 skill 文件（支持命名空间 skill：`po:release`、`dev-workflow`），解析为绝对路径列表：
 
 ```bash
-ls "$PROJECT_ROOT/.claude/commands/"*.md 2>/dev/null
-ls "$PROJECT_ROOT/.claude/agents/"*.md 2>/dev/null
-ls "$HOME/.claude/commands/"*.md 2>/dev/null
-ls "$HOME/.claude/agents/"*.md 2>/dev/null
-for skill_dir in "$HOME/.claude/skills"/*/; do
-  [ -f "${skill_dir}SKILL.md" ] && echo "${skill_dir}SKILL.md"
-done
+# 解析策略：先查 frontmatter name 字段索引，未命中再回退冒号→路径约定映射
+# 递归扫 commands/、agents/，按 is_skill_file 过滤（详见 discover_targets.sh 与 DESIGN.md §命名空间目标发现）
+UNRESOLVED_FILE="${TMPDIR:-/tmp}/skill-review-unresolved.$$"
+# 用 while-read 而非 mapfile：macOS 自带 bash 3.2 无 mapfile
+TARGET_FILES=()
+while IFS= read -r _p; do [ -n "$_p" ] && TARGET_FILES+=("$_p"); done < <(
+  bash "$SKILL_DIR/scripts/discover_targets.sh" "$TARGETS" "$PROJECT_ROOT" "$HOME" 2>"$UNRESOLVED_FILE")
+# stdout（已去重的绝对路径）→ TARGET_FILES
+# stderr（UNRESOLVED: <token> 行）→ $UNRESOLVED_FILE，供 Step 0c 处理
 ```
+
+注：`$TARGETS` 为 Step 0a-3 修正后的目标字符串。发现在 Step 0a 阶段即完成（早于 Step 0b 的 SCRATCH_DIR 创建），故 unresolved 暂落 `$UNRESOLVED_FILE`（临时路径）；Step 0c 直接读取该文件，无需依赖 SCRATCH_DIR。
 
 自指模式检测（委员会成员文件名或路径匹配以下任一）：
 - 文件名：`skill-reviewer-s1.md`, `skill-reviewer-s2.md`, `skill-reviewer-s4.md`, `skill-researcher.md`, `skill-challenger.md`, `skill-reporter.md`, `skill-review.md`
@@ -73,10 +79,12 @@ rm -f "$SCRATCH_DIR"/{s1,s2,s3,s4}_findings.md "$SCRATCH_DIR/challenger_response
 
 写入初始 progress.md：`STAGE=0 | DIM=init | STATUS=STARTED | TIME=<datetime>`
 
-**Step 0c：验证目标文件存在**
+**Step 0c：验证目标文件存在 + 处理未解析 token**
 
-对每个目标文件检查是否存在，缺失时询问继续/终止。验证后更新最终目标列表 `TARGET_FILES[]`。
-若排除后目标为空，立即终止。
+先读取 `$UNRESOLVED_FILE`：若含 `UNRESOLVED:` 行，列出无法解析的 token（如拼写错误、不存在的命名空间），按"缺失目标"询问继续（忽略这些 token）/终止。读取后清理临时文件：`rm -f "$UNRESOLVED_FILE"`。
+
+再对 `TARGET_FILES[]` 中每个路径检查是否存在（discover_targets.sh 已保证存在性，此为兜底），缺失时询问继续/终止。验证后更新最终目标列表 `TARGET_FILES[]`。
+若排除后目标为空（含全部 token 未解析的情形），立即终止。
 
 **Step 0c-1：规模预检**（阈值推导见 DESIGN.md §规模可审查性阈值推导）
 
@@ -85,7 +93,7 @@ bash "$SKILL_DIR/scripts/check_size.sh" 220 400 "$SCRATCH_DIR" "${TARGET_FILES[@
 # exit 1 = 任意文件超 400 行（已输出原因+建议），直接终止；exit 0 = 继续
 ```
 
-若目标文件数 > 15，输出 `all` 模式成本警告并询问继续/拆分。
+若目标文件数 > 15，输出 `all` 模式成本警告并询问继续/拆分。注：`all-commands` 在命名空间项目（如 happy 的 `po:*`、`dev-workflow`）下会递归纳入数十个子 skill，极易触发本警告——建议改用显式列名审查（如 `/skill-review po:release,po:health`）。
 
 **Step 0d：权限检测与文件分类**
 

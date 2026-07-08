@@ -143,7 +143,7 @@ Restart your Claude Code session after installation for agents to take effect.
 | `agents/skill-reporter.md` | `~/.claude/agents/` | Reporter — consolidated report + direct edits (sonnet + **Edit**) |
 | `agents/phase-2a-challenger.md` | `~/.claude/skills/skill-review/agents/` | Stage 2a orchestration agent (workload measurement + Challenger dispatch) |
 | `agents/phase-2b-reporter.md` | `~/.claude/skills/skill-review/agents/` | Stage 2b orchestration agent (param assembly + Reporter dispatch + Gotcha write) |
-| `scripts/*.sh` | `~/.claude/skills/skill-review/scripts/` | 10 bash helper scripts (size check, frontmatter read, self-ref write, etc.) |
+| `scripts/*.sh` | `~/.claude/skills/skill-review/scripts/` | 11 bash helper scripts (size check, frontmatter read, self-ref write, etc.) |
 | `DESIGN.md` | `~/.claude/skills/skill-review/` | Design rationale and reference tables (not loaded into execution context) |
 | `skills/validate-plugin-manifest/` | `~/.claude/skills/` | Skill for validating plugin manifests and install.sh compliance |
 
@@ -248,6 +248,18 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 ```
 
 ## Changelog
+
+### v1.9.0 (2026-07-08)
+
+Namespace target discovery + committee-audit fixes:
+
+| Item | Change |
+|------|--------|
+| `scripts/discover_targets.sh` | New: resolves targets via a frontmatter `name` index with namespace support (`po:release`, `dev-workflow`); recursive scan of commands/agents; unresolved tokens surfaced at Step 0c |
+| Whitelist regex | Target filter now accepts `:` for namespaced skills; still structurally rejects `.` and `/` |
+| `scripts/load_gotchas.sh` | Skill-name inference now prefers the frontmatter `name` field (colon → hyphen) over path heuristics |
+| `scripts/init_scratch.sh` | Concurrency lock switched to pure timestamp semantics (`LOCK_TTL=1800s`) — the old `kill -0` check tested a short-lived bash PID and never actually blocked concurrent runs |
+| `DESIGN.md` | New sections: namespace target discovery; post-2026-05-18 practice notes (sub-agent write permission model, gotcha DB growth) |
 
 ### v1.8.0 (2026-05-18)
 

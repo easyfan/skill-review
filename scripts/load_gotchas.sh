@@ -18,10 +18,20 @@ if [ ! -d "$GOTCHA_DIR" ]; then
   exit 0
 fi
 
-# 从目标文件路径推断 skill 名
-SKILL_NAME=$(basename "$(dirname "$FIRST_TARGET")")
-if [ "$SKILL_NAME" = "commands" ] || [ "$SKILL_NAME" = "agents" ]; then
-  SKILL_NAME=$(basename "$FIRST_TARGET" .md)
+# 推断 skill 名：优先用 frontmatter name 字段（命名空间 skill 冒号 → 连字符，
+# 与 gotcha 文件命名约定一致，如 name=po:release → 前缀 po-release）；
+# 无 name 字段时回退到路径启发式。
+SKILL_NAME=""
+if [ -f "$FIRST_TARGET" ]; then
+  SKILL_NAME=$(awk '/^---[[:space:]]*$/{c++; next} c==1 && /^name:[[:space:]]/{sub(/^name:[[:space:]]*/,""); gsub(/^["'"'"']|["'"'"']$/,""); print; exit} c>=2{exit}' "$FIRST_TARGET")
+  SKILL_NAME="${SKILL_NAME//:/-}"
+fi
+if [ -z "$SKILL_NAME" ]; then
+  # 回退：用父目录名；若目标直接在 commands/agents 下则用文件名
+  SKILL_NAME=$(basename "$(dirname "$FIRST_TARGET")")
+  if [ "$SKILL_NAME" = "commands" ] || [ "$SKILL_NAME" = "agents" ]; then
+    SKILL_NAME=$(basename "$FIRST_TARGET" .md)
+  fi
 fi
 
 # 加载精确匹配条目 + 通用条目

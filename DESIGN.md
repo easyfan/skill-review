@@ -123,6 +123,41 @@ STAGE=N | DIM=<维度名> | STATUS=<SUCCESS/FAIL/STARTED> | FINDINGS=N | TIME=<I
 
 ---
 
+## 命名空间目标发现（discover_targets.sh）
+
+命名空间组织的 skill（如 happy 项目 `po:*` 在 `commands/po/release.md`、`dev-workflow` 在
+`commands/dev-workflow/SKILL.md`）的目标解析逻辑，抽到 `scripts/discover_targets.sh`。
+
+**两阶段解析（name 索引优先 → 冒号路径回退）**：
+1. **name 索引**：递归扫 `commands/`、`agents/` 与 `skills/*/SKILL.md`，对通过 `is_skill_file`
+   的文件提取 frontmatter `name:` 字段建 `name → 绝对路径` 索引。用户输入 `po:release` 直接查表
+   命中——因为这些文件的 `name:` 字段**本就是** `po:release`（冒号是数据，非纯路径约定）。
+2. **冒号路径回退**：name 未命中且 token 含 `:` 时，冒号转斜杠映射试探
+   （`po:release` → `commands/po/release.md` 或 `commands/po/release/SKILL.md`）。
+3. **无冒号兜底**：试顶层 `commands/<t>.md`、命名空间目录 `commands/<t>/SKILL.md`
+   （覆盖 dev-workflow 这类无 `name:` 字段、以目录名为标识的 skill）、`skills/<t>/SKILL.md`。
+
+**is_skill_file 过滤**（all-* 枚举与索引构建共用）：必须有 frontmatter + `description:` 字段；
+排除路径段含 `/rules/`、`/references/`，排除 basename `DESIGN.md`/`README.md`/`*-schema.json`。
+必要性：`commands/po/rules/release-gate.md` 同时带 `name:` 与 `description:` 却非可审查 skill，
+纯 name 索引会误纳，故 all-* 模式必须叠加目录/文件名排除。
+
+**目录名兜底**：`dev-workflow/SKILL.md` 无 `name:` 字段，索引键取父目录名 `dev-workflow`。
+
+**gotcha name 推导一致性**：`load_gotchas.sh` 同样优先用 frontmatter `name:` 字段（冒号→连字符）
+推导 skill 名——`po:release` → 前缀 `po-release`，与 gotcha 文件命名约定（`po-audit-*.yaml`）对齐；
+无 `name:` 时回退父目录名。避免命名空间 skill 误加载同目录所有兄弟 gotcha（如 `po:release`
+旧逻辑会错纳全部 `po-*`）。
+
+**路径穿越防护**：token 由 SKILL.md Step 0a-2 正则 `[a-z0-9_:-]` 限定（无 `.`、无 `/`），
+`..` 与绝对路径在源头被结构性拒绝；脚本内再断言解析出的路径落在 4 个搜索根之内（`in_roots`），
+越界视为 UNRESOLVED。
+
+**接口契约**：stdout = 去重后的绝对路径（每行一个）；stderr = `UNRESOLVED: <token>`；
+exit 恒 0（未解析项交由 SKILL.md Step 0c 询问处理，不在脚本层终止）。
+
+---
+
 ## Stage 1 执行约束速查
 
 防止 context 饱和遗漏关键规则：
@@ -179,3 +214,48 @@ STAGE=N | DIM=<维度名> | STATUS=<SUCCESS/FAIL/STARTED> | FINDINGS=N | TIME=<I
 | Reporter 汇总员 | `skill-reporter` | sonnet | Stage 2b | 生成报告，他指模式下直接修复目标文件，写入 Gotcha 数据库 |
 
 注：S3 的 subagent_type 为 `skill-researcher`，非 `skill-reviewer-s3`（无该类型）。
+
+---
+
+## 后续实践补充（2026-05-18 之后）
+
+### Sub-agent Edit/Write 权限模型（2026-05-28 确认）
+
+Reporter 通过 Agent 工具启动时，默认以"需要确认"权限模式运行——即使 settings.json 已配置全局 `Edit(*)`/`Write(*)`，后台 sub-agent 仍会被拒绝。
+
+**解法**：Agent 调用时加 `mode: "acceptEdits"` 参数：
+
+```
+Agent({
+  description: "Reporter ...",
+  mode: "acceptEdits",
+  prompt: "..."
+})
+```
+
+- `acceptEdits`：放开 Edit/Write，Bash 仍受限（适用于 Reporter）
+- `bypassPermissions`：放开 Edit/Write + Bash（慎用，仅高信任场景）
+- 用户级 settings（`~/.claude/settings.json`）在 agent 内**不可写**；需写 settings 时操作项目级文件
+
+---
+
+### Gotcha 数据库积累（2026-05-25 批量入库）
+
+5-18 之后通过多次 skill-review 实践（skill-test、qa-gatekeeper 等审查），积累了若干可结构化为 universal gotcha 的模式，已入库 `~/.claude/skill-gotchas/`：
+
+| Gotcha ID | 模式 | 优先级 | 来源案例 |
+|-----------|------|--------|---------|
+| UNI-001 | YAML frontmatter 关键字段（allowed-tools/model）在第一个 `---` 块外，字段实际不生效 | P1 | media-editorial 审查 2026-04-14 |
+| UNI-002 | 多步骤 pipeline 中使用裸相对路径，cwd 变更时文件断裂 | P0 | media-editorial / dev-workflow |
+| UNI-008 | 结构化输出的步骤计数字段（steps_completed=N/M）N 值无法确定 | P0 | happy-e2e 审查 2026-05-03 |
+| skill-test-001 | SCRATCH_DIR 基于 `$(pwd)` 构造，跨目录调用导致 state file 路径漂移 | P0 | skill-test 审查 2026-05-07 |
+| skill-test-002 | 变量在路径解析中被引用但从未定义，错误被 `2>/dev/null` 静默吞掉 | P1 | skill-test 审查 2026-05-07 |
+| skill-test-003 | target mismatch 警告仅展示路径差异，未说明复用错误状态的后果和安全默认值 | P1 | skill-test 审查 2026-05-07 |
+| scratch-dir-fallback-not-explicit | scratch_dir 降级策略写在描述节但执行序列中无实际 Read 指令 | P1 | qa-gatekeeper 审查 2026-05-05 |
+| qa-precheck-step0-missing | QA agent 启动检查清单缺少代码/环境可验收性前置检查（git commit + 服务健康探针） | P1 | qa-gatekeeper 审查 2026-05-05 |
+
+**关键设计原则（从 gotcha 中提炼）**：
+1. **设计意图必须落地为操作指令**：描述节的降级/兜底策略，若不在执行检查清单中体现为具体步骤，等同于不存在
+2. **高风险操作的默认值应为最安全选项**：resume 提示的 default 应为 `no`（start fresh），而非 resume
+3. **`2>/dev/null` 是静默陷阱**：凡用于路径解析的变量与 `2>/dev/null` 组合，必须确认变量已定义
+4. **SCRATCH_DIR 锚点用 `$HOME`，不用 `$(pwd)`**：pipeline state file 必须有稳定的绝对路径基点

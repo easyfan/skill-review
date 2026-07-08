@@ -11,17 +11,20 @@ mkdir -p "$SCRATCH_DIR"
 mkdir -p "$REPORT_DIR"
 
 # 并发 lockfile 检查：防止多实例同时运行覆盖 scratch 文件
-# lock.pid 格式：<PID> <创建时间戳epoch>，用于检测 stale lock 和排除 PID 复用
+# lock.pid 格式：<PID> <创建时间戳epoch>。PID 仅作诊断记录：写锁的 bash 为协调者
+# 每次调用临时派生的短命进程，kill -0 存活检测恒失效（2026-07-08 审查发现），
+# 故锁语义为纯时间戳——锁龄 ≤ LOCK_TTL 视为占用，正常流程结束时由协调者 rm 释放
+LOCK_TTL=1800  # 秒；完整审查典型耗时 5-15 分钟，留足余量
 if [ -f "$SCRATCH_DIR/lock.pid" ]; then
-  read -r lock_pid lock_ts < "$SCRATCH_DIR/lock.pid"
+  read -r lock_pid lock_ts < "$SCRATCH_DIR/lock.pid" || true
   now_ts=$(date +%s)
   lock_age=$((now_ts - ${lock_ts:-0}))
-  if [ "$lock_age" -gt 1800 ]; then
-    # 锁龄超过 30 分钟，视为孤儿锁，自动清理后继续
-    echo "⚠️ 检测到孤儿 lockfile（锁龄 ${lock_age}s），已自动清理。如有疑问，手动清理：rm $SCRATCH_DIR/lock.pid" >&2
+  if [ "$lock_age" -gt "$LOCK_TTL" ]; then
+    # 锁龄超过 TTL，视为孤儿锁，自动清理后继续
+    echo "⚠️ 检测到孤儿 lockfile（锁龄 ${lock_age}s > ${LOCK_TTL}s），已自动清理。如有疑问，手动清理：rm $SCRATCH_DIR/lock.pid" >&2
     rm -f "$SCRATCH_DIR/lock.pid"
-  elif kill -0 "$lock_pid" 2>/dev/null; then
-    echo "错误：已有另一个 /skill-review 实例在运行（PID $lock_pid），请等待其完成后再执行。如误报，手动清理：rm $SCRATCH_DIR/lock.pid" >&2
+  else
+    echo "错误：已有另一个 /skill-review 实例在运行（锁龄 ${lock_age}s，创建者 PID ${lock_pid:-未知}），请等待其完成后再执行。若确认无实例在运行（如上次异常中断），手动清理：rm $SCRATCH_DIR/lock.pid" >&2
     exit 1
   fi
 fi

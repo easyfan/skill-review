@@ -162,6 +162,16 @@ bash install.sh --target /tmp/test-claude
 
 ## Changelog
 
+### v1.9.0 (2026-07-08)
+
+| Élément | Changement |
+|---------|------------|
+| `discover_targets.sh` | Nouveau : résolution des cibles via un index `name` du frontmatter, avec espaces de noms (`po:release`) |
+| `load_gotchas.sh` | L'inférence du nom de skill privilégie désormais le champ `name` du frontmatter |
+| `init_scratch.sh` | Verrou de concurrence basé uniquement sur l'horodatage |
+
+Voir [README.md](README.md) pour les notes de version complètes en anglais.
+
 ### v1.8.0 (2026-05-18)
 
 Agentification Stage 2 + compression du coordinateur (396 → 286 lignes) :
