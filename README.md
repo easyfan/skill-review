@@ -249,6 +249,18 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.10.0 (2026-07-10)
+
+Pattern feedback loop (E1) — project-level fixes now flow back to their source templates:
+
+| Item | Change |
+|------|--------|
+| Step 0g-1 (`SKILL.md`) | New detection step (other-target mode): greps target files for `generated-from` and materializes `generated_from.md`; announces when pattern instances are among review targets |
+| Reporter Phase 3.5 (`agents/skill-reporter.md`) | For each CONFIRMED fixed finding on a pattern instance, judges whether the defect originates from the template (i.e. would recur if re-instantiated in another project); hits generate/append a write-back proposal at `~/.claude/proposals/patterns/<date>_<pattern>_from-<project>.md` with fix diffs and template landing suggestions |
+| `agents/phase-2b-reporter.md` | Reporter param assembly extended to 11 items: inlines `generated_from.md` content and passes `PROJECT_ROOT` (other-target mode); self-review mode omits both |
+| Report format | New `🔁 Pattern 回流` stat line in the report tail and in the coordinator-facing summary whenever proposals are generated |
+| `DESIGN.md` | Documents the feedback-channel motivation: the same instance defect recurred across two projects two months apart because fixes had no return path to the template |
+
 ### v1.9.0 (2026-07-08)
 
 Namespace target discovery + committee-audit fixes:

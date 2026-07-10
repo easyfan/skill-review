@@ -223,6 +223,17 @@ python ~/.claude/skills/skill-creator/scripts/run_loop.py \
 
 ## Changelog
 
+### v1.10.0（2026-07-10）
+
+| 项目 | 变更 |
+|------|------|
+| Step 0g-1 | 他指模式新增 generated-from 检测：识别 pattern 实例目标并物化 generated_from.md |
+| Reporter Phase 3.5 | 对 pattern 实例的每条 CONFIRMED 已修复发现做模板共性判定，命中生成回写 proposal（含修复 diff 与模板落点建议） |
+| phase-2b-reporter | Reporter 传参扩展至 11 项（内联 generated_from.md + PROJECT_ROOT，自指模式省略） |
+| 报告格式 | 生成 proposal 时报告尾部与协调者摘要追加 `🔁 Pattern 回流` 统计行 |
+
+完整英文 release notes 见 [README.md](README.md)。
+
 ### v1.9.0（2026-07-08）
 
 | 项目 | 变更 |

@@ -149,6 +149,17 @@ yaml_preview=$(bash "$SKILL_DIR/scripts/read_frontmatter.sh" "${TARGET_FILES[@]}
 
 **Reporter 处理规则**：从 `proposal_context.md` 读取内容，在报告中新增"Proposals 摘要"节，注明"已覆盖 N 条 proposals"或"无 pending proposals"，findings 涉及 proposal 时在该节关联标注。
 
+**Step 0g-1：generated-from 检测**（与 Step 0g 并列的独立步骤）
+
+**[仅他指模式]** 以下为附加步骤，自指模式跳过：
+
+```bash
+grep -H "generated-from:" "${TARGET_FILES[@]}" > "$SCRATCH_DIR/generated_from.md" 2>/dev/null \
+  || printf "（无 generated-from 目标）\n" > "$SCRATCH_DIR/generated_from.md"
+```
+
+被审文件含 `generated-from` 字段（即 pattern 实例）时，Reporter 将对每条 CONFIRMED 已修复发现执行模板共性判定，命中则生成 pattern 回写 proposal（协议见 skill-reporter agent Phase 3.5）。检测到有效条目时向用户输出：`[Step 0g-1] 检测到 N 个 pattern 实例目标，Reporter 将启用回流判定`。
+
 **Step 0h：快照机制**
 
 ```bash
@@ -263,7 +274,7 @@ printf "\nPARTIAL_DIM: S%d\n" "$N" >> "$SCRATCH_DIR/pipeline_status.md"
 
 **Step 2a**：以 `subagent_type: "general-purpose"` 启动 Phase 2a Agent，传入 `agents/phase-2a-challenger.md` 内容作为 prompt，附上 SKILL_DIR、SCRATCH_DIR、TARGET_FILES、pipeline_status.md 路径。等待完成后读取 `$SCRATCH_DIR/challenger_preview.md`。
 
-**Step 2b**：以 `subagent_type: "general-purpose"` 启动 Phase 2b Agent，传入 `agents/phase-2b-reporter.md` 内容作为 prompt，附上 SKILL_DIR、SCRATCH_DIR、TARGET_FILES、SELF_REF、REPORT_DIR 及 challenger_preview.md 内容。
+**Step 2b**：以 `subagent_type: "general-purpose"` 启动 Phase 2b Agent，传入 `agents/phase-2b-reporter.md` 内容作为 prompt，附上 SKILL_DIR、SCRATCH_DIR、TARGET_FILES、SELF_REF、REPORT_DIR 及 challenger_preview.md 内容；他指模式另附 `PROJECT_ROOT=<绝对路径>`（字符串传参，Phase 3.5 proposal 命名依赖）与 generated_from.md 内容（内联）。Reporter 的完整传参项（含 file_classification.md、当前日期等）见 `agents/phase-2b-reporter.md` 传参组装节。
 
 ---
 

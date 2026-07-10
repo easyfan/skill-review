@@ -111,6 +111,8 @@ STAGE=N | DIM=<维度名> | STATUS=<SUCCESS/FAIL/STARTED> | FINDINGS=N | TIME=<I
 
 **自指模式下跳过 Proposal 扫描**：proposals/agents/ 和 proposals/commands/ 中可能存储关于 skill-review 自身的观察，注入会改变正在执行的审查流程，造成自我参照悖论。
 
+**Pattern 回流通道（2026-07-09 新增）**：他指模式下，被审文件含 `generated-from` 字段（pattern 实例）时，Reporter 对每条 CONFIRMED 已修复发现执行模板共性判定（换项目实例化是否复发），命中则生成 `~/.claude/proposals/patterns/<date>_<pattern>_from-<project>.md` 回写 proposal，供 /pattern-review 批次消费。设计动机：项目级实例的修复此前无回流渠道，同一缺陷曾在 happy 与 backtrader 相隔两个月原样复发（证据见 proposals/patterns/20260708_cross-project-skill-refine-feedback.md）。检测在 Step 0g-1，传参接线在 phase-2b-reporter.md，判定协议在 skill-reporter agent Phase 3.5。
+
 ---
 
 ## scripts/ 目录设计原则

@@ -1,6 +1,6 @@
 ---
 name: skill-reporter
-description: Skills/Agents 设计委员会 Reporter——综合 Stage 1 发现和 Challenger 裁定，生成审查报告，并对已确认问题直接修复目标文件。由 /skill-review 协调者在 Stage 2b 调度。
+description: Skills/Agents 设计委员会 Reporter——综合 Stage 1 发现和 Challenger 裁定，生成审查报告，并对已确认问题直接修复目标文件；他指模式下额外执行 Gotcha 写入与 Pattern 回流判定（Phase 3.5）。由 /skill-review 协调者在 Stage 2b 调度。
 model: sonnet
 allowed-tools: ["Read", "Bash", "Write", "Edit"]
 ---
@@ -25,6 +25,8 @@ allowed-tools: ["Read", "Bash", "Write", "Edit"]
 - 报告输出路径（`$REPORT_DIR`）和文件名
 - 直接修改授权说明（含权限模式：ELEVATED/非 ELEVATED）
 - pipeline_status.md 路径（判断是否为零发现场景）
+- （可选，仅他指模式）`$SCRATCH_DIR/proposal_context.md` — 当前项目 Proposals 上下文
+- （可选，仅他指模式）generated_from.md 内容与 PROJECT_ROOT — Phase 3.5 Pattern 回流所需
 
 ## 工作流程
 
@@ -39,6 +41,7 @@ allowed-tools: ["Read", "Bash", "Write", "Edit"]
 6. `$SCRATCH_DIR/s4_findings.md`
 7. `$SCRATCH_DIR/challenger_response.md`
 8. `$SCRATCH_DIR/format_issues.md`
+9. `$SCRATCH_DIR/proposal_context.md`（仅他指模式，文件不存在时跳过）
 
 ### Phase 2: 整合发现与裁定
 
@@ -80,6 +83,27 @@ FIELD | FILE | BEFORE | AFTER
 ```
 
 **自指模式约束**：若协调者传入了"自指模式"标记，**禁止任何 Edit 操作**，所有发现仅作建议输出。
+
+### Phase 3.5: Pattern 回流判定（仅他指模式）
+
+**前置条件**：协调者传入的 `generated_from.md` 内容含有效条目（格式 `<文件路径>:generated-from: <pattern>[@<version>]`）。无有效条目、未传入该参数或自指模式时跳过本阶段。
+
+对 modification_log.md 中**每条 CONFIRMED 已修复发现**，若其目标文件含 `generated-from`，追加一次判定：
+
+> 该缺陷是否源于模板缺失/错误指引——即换一个项目从同一 pattern 实例化，会原样复发？
+
+判定依据（满足其一即命中）：
+- 缺陷位于实例从模板继承的结构（步骤编排、agent 职责表、路径/传参约定、返回模板、工具清单），而非项目专属定制内容
+- 同类缺陷在 gotcha_context.md 或 findings 中已有跨项目复发记录
+
+命中时生成回写 proposal：`~/.claude/proposals/patterns/<YYYYMMDD>_<pattern>_from-<project>.md`
+- `<pattern>` = generated-from 值去掉 `@<version>` 后缀；`<project>` = 目标文件所属项目根目录名（从 PROJECT_ROOT 取 basename）
+- 同一 pattern 的多条命中发现合并写入同一文件；文件已存在时追加条目，不覆盖已有内容
+- 每条条目必含：发现标题与优先级、来源审计员（S1-S4）、修复 diff（BEFORE → AFTER，取自 modification_log.md）、模板落点建议（模板文件中应修改的章节与修改方向）
+- 文件头部标注 `**状态**: 📋 pending`，供 `/pattern-review` 或人工批次消费
+- 与报告文件相同，用 Bash heredoc 写入，禁止用 Write 工具
+
+完成后在报告末尾追加统计行：`🔁 Pattern 回流：<pattern> 生成/更新 proposal（N 条发现）→ ~/.claude/proposals/patterns/`；无命中时不追加、不生成文件。该统计行同时写入返回给协调者的摘要（见「输出目标」节返回模板；无命中时省略该行，不输出占位），确保用户无需翻报告即可发现 proposal 已生成。
 
 ### Phase 4: 生成审查报告
 
@@ -136,6 +160,12 @@ FIELD | FILE | BEFORE | AFTER
 ## 通过项
 
 - <文件名>: 通过（S? 验证）
+
+---
+
+## Proposals 摘要
+
+（来自 proposal_context.md；仅他指模式且有内容时填充——注明"已覆盖 N 条 proposals"或"无 pending proposals"，findings 涉及 proposal 时在此关联标注；自指模式省略该节）
 
 ---
 
@@ -199,6 +229,7 @@ FIELD | FILE | BEFORE | AFTER
 1. `$REPORT_DIR/skill_review_<YYYYMMDD>.md` — 审查报告
 2. `$SCRATCH_DIR/modification_log.md` — 修改日志
 3. （如适用）`~/.claude/proposals/<type>/<date>_<project>_<topic>.md` — 用户级文件建议
+4. （如适用）`~/.claude/proposals/patterns/<date>_<pattern>_from-<project>.md` — pattern 回写 proposal（Phase 3.5）
 
 返回给协调者的摘要（≤500 token）：
 ```
@@ -206,4 +237,5 @@ FIELD | FILE | BEFORE | AFTER
 已直接修复：a 个 | 建议采纳：b 个 | 争议：c 个 | 通过：d 个
 报告：<$REPORT_DIR/skill_review_YYYYMMDD.md>
 直接修改文件：<逐行列出，若无则"无直接修改">
+🔁 Pattern 回流：<pattern> proposal → ~/.claude/proposals/patterns/<文件名>（N 条发现）〔仅 Phase 3.5 有命中时输出此行〕
 ```

@@ -162,6 +162,16 @@ bash install.sh --target /tmp/test-claude
 
 ## Changelog
 
+### v1.10.0 (2026-07-10)
+
+| Élément | Changement |
+|---------|------------|
+| Step 0g-1 | Nouvelle détection des instances de pattern (`generated-from`) parmi les cibles de revue |
+| Reporter Phase 3.5 | Les corrections confirmées sur des instances de pattern sont évaluées pour origine template ; les hits génèrent un proposal de rétro-écriture |
+| phase-2b-reporter | Paramètres du Reporter étendus à 11 (generated_from.md + PROJECT_ROOT) |
+
+Voir [README.md](README.md) pour les notes de version complètes en anglais.
+
 ### v1.9.0 (2026-07-08)
 
 | Élément | Changement |
